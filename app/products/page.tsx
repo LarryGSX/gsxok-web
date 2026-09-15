@@ -1,9 +1,12 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { Nav } from '@/components/layout/Nav'
 import { Footer } from '@/components/layout/Footer'
 import { Button } from '@/components/ui/Button'
-import { ProductFamilySection } from '@/components/products/ProductFamilySection'
-import { PRODUCT_FAMILIES } from '@/lib/products/catalog'
+import { ChocolateChapter } from '@/components/products/ChocolateChapter'
+import { GummiesChapter } from '@/components/products/GummiesChapter'
+import { FruitCrunchersChapter } from '@/components/products/FruitCrunchersChapter'
+import { HammerChapter } from '@/components/products/HammerChapter'
 
 export const metadata = {
   title: 'Products',
@@ -12,89 +15,72 @@ export const metadata = {
 
 const G = 'w-full max-w-[1280px] mx-auto px-6 md:px-16 xl:px-24'
 
-const FAMILY_EMPHASIS: Record<string, 'flagship' | 'standard' | 'simple'> = {
-  'chocolate-bites': 'flagship',
-  'precision-crafted-gummies': 'standard',
-  'fruit-crunchers': 'standard',
-  // The Hammer uses layout: 'solo' below, which has its own padding and
-  // ignores emphasis entirely — this value is a harmless placeholder.
-  'the-hammer': 'standard',
-  // 'simple' emphasis's tighter section padding is the desired effect here;
-  // its other effects (cardSize fallback, intro/row split) don't apply since
-  // this family already sets its own cardSize below and isn't flagship.
-  'chocolate-bites-singles': 'simple',
-}
-
-// The Hammer is the page's only single-SKU family — it gets the centered
-// "solo" closing treatment (see ProductFamilySection) instead of the
-// row template every other family uses, so it reads as a deliberate final
-// product-family moment rather than one small card in a row with less
-// room than everyone else.
-const FAMILY_LAYOUT: Record<string, 'row' | 'solo'> = {
-  'the-hammer': 'solo',
-}
-
-// Matches the footer's existing "/products#gummies" and "/products#chocolates"
-// links, which had no matching target on this page until now.
-const FAMILY_ANCHOR_IDS: Record<string, string> = {
-  'chocolate-bites': 'chocolates',
-  'precision-crafted-gummies': 'gummies',
-}
-
-// Overrides artwork size independent of emphasis (see ProductFamilySection's
-// cardSize prop) — Chocolate Bites Singles keeps standard emphasis/spacing
-// but uses slightly smaller artwork than Gummies/Fruit Crunchers. The
-// Hammer's 'xlarge' is sized for its solo centered layout, where it's the
-// section's entire visual focus rather than one card sharing a row.
-const FAMILY_CARD_SIZE: Record<string, 'compact' | 'default' | 'medium' | 'large' | 'xlarge'> = {
-  'chocolate-bites-singles': 'compact',
-  'the-hammer': 'xlarge',
-}
-
-// Nudges the left intro block up (px, at xl+ only) so it reads balanced
-// against a row whose artwork is noticeably shorter than the section's
-// original card size — currently only needed for Chocolate Bites Singles.
-const FAMILY_INTRO_OFFSET: Record<string, number> = {
-  'chocolate-bites-singles': -32,
-}
+// Same authentic multi-product lineup photo already approved and used as
+// the Homepage hero — reused here rather than assembling a new composite
+// from individual package cutouts, since a real, already-shot composite of
+// the whole lineup is the strongest authentic option available. Hardcoded
+// (not pulled from the same Sanity field Homepage uses) so this page's
+// hero stays stable if that CMS field is ever changed for the Homepage.
+const LINEUP_PHOTO_URL = 'https://cdn.sanity.io/images/o7wavkxv/production/b9b67322f08a0147d0f1b71056f5c7682b9892ad-1672x941.webp'
 
 export default function ProductsPage() {
   return (
     <>
       <Nav />
       <main>
-        {/* ── Compact dark intro — not a homepage-scale hero ──────────── */}
+        {/* ── HERO — product-led, not a plain text intro. Real lineup photo,
+            not a new composite or invented lifestyle imagery. ──────────── */}
         <section className="bg-[var(--color-ink)]">
-          <div className={G} style={{ paddingTop: '3.5rem', paddingBottom: '3.5rem' }}>
-            <h1
-              className="text-[var(--color-cream)] font-[family-name:var(--font-space-grotesk)] font-semibold"
-              style={{ fontSize: 'clamp(2rem, 3.4vw, 3rem)', lineHeight: '1.05', letterSpacing: '-0.03em' }}
-            >
-              The GSX Lineup
-            </h1>
-            <p
-              className="text-[rgba(250,248,243,0.5)] font-[family-name:var(--font-manrope)] font-light"
-              style={{ fontSize: '1.0625rem', lineHeight: '1.68', marginTop: '1rem', maxWidth: '56ch' }}
-            >
-              Explore the GSX lineup, formulated, manufactured, and packaged by our team in Chelsea, Oklahoma. Find GSX at a licensed dispensary near you.
-            </p>
+          <div className={`${G} lg:grid lg:grid-cols-[46fr_54fr] lg:items-center lg:gap-12`}>
+            <div style={{ paddingTop: '3.5rem', paddingBottom: '2rem' }}>
+              <p className="text-label" style={{ color: 'rgba(250,248,243,0.5)', marginBottom: '1rem' }}>Products</p>
+              <h1
+                className="text-[var(--color-cream)] font-[family-name:var(--font-space-grotesk)] font-bold"
+                style={{ fontSize: 'clamp(2.5rem, 4.2vw, 3.75rem)', lineHeight: '1', letterSpacing: '-0.03em' }}
+              >
+                The Full GSX Lineup
+              </h1>
+              <p
+                className="text-[rgba(250,248,243,0.5)] font-[family-name:var(--font-manrope)] font-light"
+                style={{ fontSize: '1.0625rem', lineHeight: '1.68', marginTop: '1.25rem', maxWidth: '44ch' }}
+              >
+                Chocolate Bites, Precision Crafted Gummies, Fruit Crunchers, and The Hammer, every product formulated, manufactured, and packaged by our team in Chelsea, Oklahoma.
+              </p>
+              <div className="flex flex-wrap items-center gap-5" style={{ marginTop: '2rem' }}>
+                <Link
+                  href="#chocolates"
+                  className="text-button px-8 h-12 inline-flex items-center bg-[var(--color-green)] text-[var(--color-cream)] border border-[var(--color-green)] hover:bg-[#155f3a] hover:border-[#155f3a] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+                >
+                  Explore The Lineup
+                </Link>
+                <Link
+                  href="/find-gsx"
+                  className="text-button text-[rgba(250,248,243,0.4)] hover:text-[var(--color-cream)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:rounded-sm"
+                >
+                  Find GSX →
+                </Link>
+              </div>
+            </div>
+            <div className="flex items-center justify-center w-full" style={{ paddingBottom: '2rem' }}>
+              <Image
+                src={LINEUP_PHOTO_URL}
+                alt="GSX product lineup: Precision Crafted Gummies, The Hammer, Fruit Crunchers, and Chocolate Bites"
+                width={1672}
+                height={941}
+                priority
+                sizes="(max-width: 1024px) 100vw, 54vw"
+                className="w-full h-auto lg:max-w-[720px]"
+              />
+            </div>
           </div>
         </section>
 
-        {/* ── Product families — cream showroom, real package artwork ─── */}
-        {PRODUCT_FAMILIES.map((family, i) => (
-          <ProductFamilySection
-            key={family.slug}
-            family={family}
-            index={i + 1}
-            emphasis={FAMILY_EMPHASIS[family.slug] ?? 'standard'}
-            tone={i % 2 === 0 ? 'cream' : 'cream-2'}
-            id={FAMILY_ANCHOR_IDS[family.slug]}
-            cardSize={FAMILY_CARD_SIZE[family.slug]}
-            introOffset={FAMILY_INTRO_OFFSET[family.slug]}
-            layout={FAMILY_LAYOUT[family.slug]}
-          />
-        ))}
+        {/* ── Product family chapters — each its own visual identity, one
+            shared CTA per chapter instead of a button under every SKU ─── */}
+        <ChocolateChapter />
+        <GummiesChapter />
+        <FruitCrunchersChapter />
+        <HammerChapter />
 
         {/* ── Find GSX ──────────────────────────────────────────────── */}
         <section className="bg-[var(--color-ink-alt)] border-t border-[rgba(250,248,243,0.06)]">
