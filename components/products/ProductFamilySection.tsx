@@ -1,4 +1,3 @@
-// components/products/ProductFamilySection.tsx
 import { ProductShowcaseCard } from './ProductShowcaseCard'
 import type { ProductFamily } from '@/lib/products/catalog'
 
@@ -18,7 +17,7 @@ interface ProductFamilySectionProps {
    * Bites Singles keeps 'standard' emphasis/spacing but uses slightly smaller
    * 'compact' artwork).
    */
-  cardSize?: 'compact' | 'default' | 'medium' | 'large'
+  cardSize?: 'compact' | 'default' | 'medium' | 'large' | 'xlarge'
   /**
    * Nudges the left intro block up (negative px) at xl+ only, for a family
    * whose product row got noticeably shorter (e.g. Chocolate Bites Singles'
@@ -27,9 +26,17 @@ interface ProductFamilySectionProps {
    * this has no effect. Applied via a CSS var so omitting it is a no-op.
    */
   introOffset?: number
+  /**
+   * 'row' (default): the standard intro-left / product-row-right template
+   * used by four of the five families. 'solo': a centered, single-product
+   * closing treatment used only by The Hammer, so the page's one single-SKU
+   * family reads as a deliberate final moment rather than a small card in a
+   * row with less room than everyone else.
+   */
+  layout?: 'row' | 'solo'
 }
 
-export function ProductFamilySection({ family, index, emphasis = 'standard', tone = 'cream', id, cardSize, introOffset }: ProductFamilySectionProps) {
+export function ProductFamilySection({ family, index, emphasis = 'standard', tone = 'cream', id, cardSize, introOffset, layout = 'row' }: ProductFamilySectionProps) {
   // Flagship (Chocolate Bites) gets larger artwork; single-SKU families
   // (The Hammer) stay at the original size rather than being stretched to
   // fill their column. Standard families sit at the row-favoring end of the
@@ -43,10 +50,20 @@ export function ProductFamilySection({ family, index, emphasis = 'standard', ton
   // before this pass).
   const resolvedCardSize = cardSize ?? (emphasis === 'flagship' ? 'large' : emphasis === 'simple' ? 'default' : 'medium')
   const count = family.variants.length
-  const introSplit = emphasis === 'flagship' ? 'xl:grid-cols-[26fr_74fr]' : 'xl:grid-cols-[30fr_70fr]'
+  const introSplit = emphasis === 'flagship' ? 'xl:grid-cols-[22fr_78fr]' : 'xl:grid-cols-[30fr_70fr]'
 
   const rowCols =
     count >= 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : count === 2 ? 'sm:grid-cols-2' : ''
+
+  // Small numeral eyebrow ("01"-"05") above every family heading — a
+  // restrained editorial rhythm device so five sections read as five
+  // distinct chapters, not one repeating catalog template. Same treatment
+  // in both layouts below.
+  const eyebrow = (
+    <p className="text-label" style={{ color: 'var(--color-green)', marginBottom: '0.6rem' }}>
+      {String(index).padStart(2, '0')}
+    </p>
+  )
 
   return (
     <section
@@ -65,32 +82,57 @@ export function ProductFamilySection({ family, index, emphasis = 'standard', ton
           'linear-gradient(to bottom, rgba(26,122,74,0.32) 0%, rgba(26,122,74,0.12) 20%, rgba(26,122,74,0) 60%, rgba(26,122,74,0) 100%)',
       }}
     >
-      <div className={`${G} ${emphasis === 'simple' ? 'py-10 md:py-12' : 'py-12 md:py-16'}`}>
-        <div className={`xl:grid ${introSplit} xl:items-center xl:gap-x-12`}>
-          {/* Family intro: heading, green rule, description */}
-          <div
-            className="xl:[transform:translateY(var(--intro-offset,0px))]"
-            style={{ '--intro-offset': `${introOffset ?? 0}px` } as any}
-          >
-            <h2 className="text-h2 text-[var(--color-dark)] mt-2">
-              {family.name}
-            </h2>
-            <div style={{ width: '40px', height: '2px', backgroundColor: 'var(--color-green)', marginTop: '0.9rem' }} />
-            <p className="text-body text-[var(--color-muted)] mt-3 max-w-[42ch]">{family.description}</p>
+      {layout === 'solo' ? (
+        // Centered, single-product closing treatment — The Hammer only.
+        // Full section padding (not the compressed 'simple' padding the
+        // rest of this family's config still uses for other purposes),
+        // so this reads as a deliberate final moment, not a small
+        // afterthought squeezed into less room than its neighbors.
+        <div className={G} style={{ paddingTop: '4.5rem', paddingBottom: '5rem' }}>
+          <div className="flex flex-col items-center text-center mx-auto" style={{ maxWidth: '480px' }}>
+            {eyebrow}
+            <h2 className="text-h2 text-[var(--color-dark)]">{family.name}</h2>
+            <div style={{ width: '40px', height: '2px', backgroundColor: 'var(--color-green)', margin: '0.9rem auto 0' }} />
+            <p className="text-body text-[var(--color-muted)] mt-3">{family.description}</p>
           </div>
-
-          {/* Product row: horizontal on desktop, stacks under the intro below xl */}
-          <div
-            className={`grid grid-cols-1 ${rowCols} gap-x-6 gap-y-10 mt-8 xl:mt-0 ${
-              count === 1 ? 'max-w-xs xl:max-w-none' : ''
-            }`}
-          >
-            {family.variants.map((variant) => (
-              <ProductShowcaseCard key={variant.slug} variant={variant} size={resolvedCardSize} alignToRow={count > 1} />
-            ))}
+          {/* mx-auto block (not flex justify-center) so this wrapper has a
+              real definite width for ProductShowcaseCard's own internal
+              w-full/max-w to resolve against — as a flex child instead, it
+              had no definite containing width and collapsed to its content
+              size, never reaching the intended xlarge cap. */}
+          <div className="mt-10 mx-auto" style={{ maxWidth: '420px' }}>
+            <ProductShowcaseCard variant={family.variants[0]} size={resolvedCardSize} alignToRow={false} />
           </div>
         </div>
-      </div>
+      ) : (
+        <div className={`${G} ${emphasis === 'simple' ? 'py-10 md:py-12' : 'py-14 md:py-20'}`}>
+          <div className={`xl:grid ${introSplit} xl:items-center xl:gap-x-12`}>
+            {/* Family intro: numeral eyebrow, heading, green rule, description */}
+            <div
+              className="xl:[transform:translateY(var(--intro-offset,0px))]"
+              style={{ '--intro-offset': `${introOffset ?? 0}px` } as any}
+            >
+              {eyebrow}
+              <h2 className="text-h2 text-[var(--color-dark)]">
+                {family.name}
+              </h2>
+              <div style={{ width: '40px', height: '2px', backgroundColor: 'var(--color-green)', marginTop: '0.9rem' }} />
+              <p className="text-body text-[var(--color-muted)] mt-3 max-w-[42ch]">{family.description}</p>
+            </div>
+
+            {/* Product row: horizontal on desktop, stacks under the intro below xl */}
+            <div
+              className={`grid grid-cols-1 ${rowCols} gap-x-6 gap-y-10 mt-8 xl:mt-0 ${
+                count === 1 ? 'max-w-xs xl:max-w-none' : ''
+              }`}
+            >
+              {family.variants.map((variant) => (
+                <ProductShowcaseCard key={variant.slug} variant={variant} size={resolvedCardSize} alignToRow={count > 1} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
