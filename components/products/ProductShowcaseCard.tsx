@@ -1,4 +1,3 @@
-// components/products/ProductShowcaseCard.tsx
 import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
 import type { ProductVariant } from '@/lib/products/catalog'
@@ -13,13 +12,14 @@ interface ProductShowcaseCardProps {
   variant: ProductVariant
   /**
    * 'large' = flagship (Chocolate Bites), 'medium' = the other multi-product
-   * families (Gummies, Fruit Crunchers), 'default' = single-SKU families
-   * (The Hammer) which are deliberately left at their original size rather
-   * than enlarged to fill their column, 'compact' = Chocolate Bites Singles,
-   * slightly smaller than 'default' so tall poster-style package art reads
-   * a bit less large without shrinking the category itself.
+   * families (Gummies, Fruit Crunchers), 'default' = reserved for future use,
+   * 'compact' = Chocolate Bites Singles, slightly smaller than 'default' so
+   * tall poster-style package art reads a bit less large without shrinking
+   * the category itself, 'xlarge' = The Hammer's solo centered layout,
+   * where the single product IS the section's whole visual focus rather
+   * than one card sharing a row.
    */
-  size?: 'compact' | 'default' | 'medium' | 'large'
+  size?: 'compact' | 'default' | 'medium' | 'large' | 'xlarge'
   /**
    * True when this card shares a row with siblings (the family has more
    * than one product) — lets the CTA align to a shared bottom baseline via
@@ -31,17 +31,19 @@ interface ProductShowcaseCardProps {
 }
 
 const maxWidthClass: Record<NonNullable<ProductShowcaseCardProps['size']>, string> = {
-  compact: 'max-w-[155px]',
-  default: 'max-w-[220px]',
-  medium: 'max-w-[250px]',
-  large: 'max-w-[320px]',
+  compact: 'max-w-[170px]',
+  default: 'max-w-[240px]',
+  medium: 'max-w-[280px]',
+  large: 'max-w-[360px]',
+  xlarge: 'max-w-[420px]',
 }
 
 const imageSizes: Record<NonNullable<ProductShowcaseCardProps['size']>, string> = {
-  compact: '(max-width: 768px) 32vw, 155px',
-  default: '(max-width: 768px) 45vw, 220px',
-  medium: '(max-width: 768px) 45vw, 250px',
-  large: '(max-width: 768px) 60vw, 320px',
+  compact: '(max-width: 768px) 36vw, 170px',
+  default: '(max-width: 768px) 50vw, 240px',
+  medium: '(max-width: 768px) 50vw, 280px',
+  large: '(max-width: 768px) 65vw, 360px',
+  xlarge: '(max-width: 768px) 75vw, 420px',
 }
 
 export function ProductShowcaseCard({ variant, size = 'default', alignToRow = false }: ProductShowcaseCardProps) {
