@@ -1,4 +1,3 @@
-// lib/products/catalog.ts
 // Products page catalog data.
 //
 // Sanity has a full `product` / `productFamily` schema (see
@@ -34,6 +33,18 @@ export interface ProductVariant {
   pieceCount?: string
   /** Per-piece or per-square potency as printed on the package. */
   perPiece?: string
+  /**
+   * Total potency per bag/bar as printed on the package. Only set where the
+   * real packaging actually prints a total (Fruit Crunchers, The Hammer) —
+   * Chocolate Bites and Gummies packages print no per-piece or total mg
+   * figure at all, confirmed by direct inspection of the package art, so
+   * this is intentionally left unset there rather than computed or guessed.
+   * Not always exactly perPiece × pieceCount — see The Hammer, whose real
+   * package prints 1000mg CBD total alongside 40mg CBD/square × 24 squares
+   * (960mg); that inconsistency exists on the approved packaging itself and
+   * is reproduced as-is rather than silently corrected.
+   */
+  totalPotency?: string
   /** True when no approved package artwork exists yet. Renders a labeled placeholder instead of inventing artwork. */
   placeholder?: boolean
 }
@@ -187,6 +198,7 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
         netWeight: '60g (2.12oz)',
         pieceCount: '40 Pieces',
         perPiece: '25mg THC / 10mg CBD per piece',
+        totalPotency: '1000mg THC / 400mg CBD per bag',
       },
       {
         name: 'Relax',
@@ -198,6 +210,7 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
         netWeight: '60g (2.12oz)',
         pieceCount: '40 Pieces',
         perPiece: '25mg THC / 10mg CBN per piece',
+        totalPotency: '1000mg THC / 400mg CBN per bag',
       },
       {
         name: 'Boost',
@@ -209,6 +222,7 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
         netWeight: '60g (2.12oz)',
         pieceCount: '40 Pieces',
         perPiece: '25mg THC / 10mg CBG per piece',
+        totalPotency: '1000mg THC / 400mg CBG per bag',
       },
     ],
   },
@@ -227,6 +241,11 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
         netWeight: '8g (2.82oz)',
         pieceCount: '1 Bar, 24 Squares',
         perPiece: '175mg THC / 40mg CBD per square',
+        // The real package prints this total directly (front-of-pack: "4200mg
+        // THC / 1000mg CBD"). Note 40mg x 24 squares = 960mg, not 1000mg —
+        // that inconsistency is on the approved packaging itself, not
+        // introduced here. Both figures are reproduced exactly as printed.
+        totalPotency: '4200mg THC / 1000mg CBD per bar',
       },
     ],
   },
