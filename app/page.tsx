@@ -14,11 +14,6 @@ type Article        = { _id: string; title: string; slug: { current: string }; s
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SanityImage    = any
 
-function hotspotPos(img?: SanityImage) {
-  if (!img?.hotspot) return 'center center'
-  return `${Math.round(img.hotspot.x * 100)}% ${Math.round(img.hotspot.y * 100)}%`
-}
-
 const G = 'w-full max-w-[1280px] mx-auto px-6 md:px-16 xl:px-24'
 
 function Rule({ className = '' }: { className?: string }) {
@@ -50,6 +45,20 @@ const PROCESS_MARKERS = ['Ingredient sourcing', 'Written batch procedures', 'Fin
 // (production line, American and Oklahoma flags, GSX wall logo). Native
 // resolution 1310x1200, rendered at intrinsic aspect ratio, no crop.
 const FACILITY_PHOTO_URL = 'https://cdn.sanity.io/images/o7wavkxv/production/488d2b67b8289033440ea79284b9772023b2961c-1310x1200.jpg'
+
+// Approved production-in-progress photo for the "Real equipment, real
+// people, real product" section — a cooling-tunnel drawer of freshly molded
+// Hammer/Chocolate Bites squares emerging onto the line. Hardcoded rather
+// than pulled from the Sanity siteSettings.processImage field (as this
+// section used to do): this asset was the strongest authentic match for
+// "production in progress" out of every image asset in the Sanity media
+// library (reviewed directly via the Content API), but the read token
+// available here can't write back a new asset assignment to the CMS
+// document, so the choice is hardcoded here instead, same pattern as
+// FACILITY_PHOTO_URL above. No people in this shot (unlike the previous
+// processImage asset), but no bare hands either — see the completion
+// report for the other candidates considered and why this one won.
+const PROCESS_PHOTO_URL = 'https://cdn.sanity.io/images/o7wavkxv/production/8b4daec20b416d47f422574d4295ed4b914a435f-1152x1536.jpg'
 
 function FlaskIcon() {
   return (
@@ -97,9 +106,7 @@ export default async function HomePage() {
   void families // reserved for when real productFamily records exist
 
   const heroImg    : SanityImage = s?.heroImage    ?? null
-  const processImg : SanityImage = s?.processImage ?? null
   const heroSrc    = heroImg    ? urlFor(heroImg).auto('format').fit('max').width(1600).url() : null
-  const processSrc = processImg ? urlFor(processImg).auto('format').fit('max').width(1600).url() : null
 
   return (
     <>
@@ -173,7 +180,7 @@ export default async function HomePage() {
                   maxWidth: '46ch',
                 }}
               >
-                GSX develops, manufactures, and packages every product it sells, right here in Chelsea, Oklahoma. No contract manufacturing. No outsourced formulation.
+                No contract manufacturing. No outsourced formulation. GSX is the only company behind every product it sells.
               </p>
               <div
                 className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 lg:shrink-0 mt-8 lg:mt-0"
@@ -224,7 +231,7 @@ export default async function HomePage() {
                   className="font-[family-name:var(--font-manrope)] font-light"
                   style={{ color: 'rgba(250,248,243,0.55)', fontSize: '1rem', lineHeight: '1.7' }}
                 >
-                  From formulation through manufacturing and final packaging, every GSX edible is produced by our team in Chelsea, Oklahoma.
+                  Every GSX product on the shelf started here, built and run by our own team in Chelsea.
                 </p>
                 <p
                   className="text-label"
@@ -240,14 +247,14 @@ export default async function HomePage() {
             </div>
 
             <div
-              className="grid grid-cols-1 sm:grid-cols-3"
-              style={{ marginTop: '3.5rem', gap: '2rem', paddingTop: '2rem', borderTop: '1px solid rgba(250,248,243,0.1)' }}
+              className="grid grid-cols-3 gap-4 sm:gap-8 mt-10 sm:mt-14 pt-6 sm:pt-8"
+              style={{ borderTop: '1px solid rgba(250,248,243,0.1)' }}
             >
               {PROOF_STRIP.map(({ Icon, line1, line2 }) => (
-                <div key={line1} className="flex items-center gap-4">
+                <div key={line1} className="flex flex-col items-center text-center gap-2 sm:flex-row sm:items-center sm:text-left sm:gap-4">
                   <div
-                    className="flex items-center justify-center shrink-0 rounded-full"
-                    style={{ width: '44px', height: '44px', border: '1px solid var(--color-green)', color: 'var(--color-green)' }}
+                    className="flex items-center justify-center shrink-0 rounded-full w-9 h-9 sm:w-11 sm:h-11"
+                    style={{ border: '1px solid var(--color-green)', color: 'var(--color-green)' }}
                   >
                     <Icon />
                   </div>
@@ -282,7 +289,7 @@ export default async function HomePage() {
                 className="text-[rgba(250,248,243,0.48)] font-[family-name:var(--font-manrope)] font-light"
                 style={{ fontSize: '1rem', lineHeight: '1.7', marginTop: '1.25rem' }}
               >
-                Our Chelsea, Oklahoma facility handles every step: formulation, production, and packaging, all under one roof, by our own team.
+                Consistency starts with process, not chance. Every batch follows the same written procedures, in the same facility, by the same team. That discipline is what Respect the Dose means to us.
               </p>
               <ul style={{ marginTop: '1.75rem' }} className="flex flex-col gap-2.5">
                 {PROCESS_MARKERS.map((step) => (
@@ -302,18 +309,14 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="relative w-full mt-10 lg:mt-0" style={{ aspectRatio: '4 / 3' }}>
-              {processSrc ? (
-                <Image
-                  src={processSrc}
-                  alt={processImg?.alt ?? 'GSX team member in gloves holding a tray of product beside production equipment'}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 55vw"
-                  className="object-cover"
-                  style={{ objectPosition: processImg?.hotspot ? hotspotPos(processImg) : '50% 20%' }}
-                />
-              ) : (
-                <div className="absolute inset-0 bg-[var(--color-ink-alt)]" />
-              )}
+              <Image
+                src={PROCESS_PHOTO_URL}
+                alt="A cooling-tunnel drawer of freshly molded GSX chocolate squares emerging onto the production line"
+                fill
+                sizes="(max-width: 1024px) 100vw, 55vw"
+                className="object-cover"
+                style={{ objectPosition: '50% 38%' }}
+              />
             </div>
           </div>
         </section>
