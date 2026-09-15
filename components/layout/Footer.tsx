@@ -33,7 +33,7 @@ export function Footer() {
               GSX
             </span>
             <p className="text-body-sm text-[rgba(250,248,243,0.45)] leading-relaxed">
-              Oklahoma-licensed cannabis manufacturer. Documented processes. Required testing. Consistent product.
+              Oklahoma-licensed cannabis manufacturer. Controlled processes. Precision formulation. Consistent product.
             </p>
             <address className="not-italic text-body-sm text-[rgba(250,248,243,0.35)] leading-relaxed">
               Chelsea, OK 74016
