@@ -6,10 +6,6 @@ const G = 'w-full max-w-[1280px] mx-auto px-6 md:px-16 xl:px-24'
 
 const fruitCrunchers = PRODUCT_FAMILIES.find((f) => f.slug === 'fruit-crunchers')!
 
-// Warm citrus accent, specific to this chapter — derived from the real
-// Elevate/Boost package colors (green-to-orange, orange-to-red). Relax's
-// own package is blue/teal, kept as that one card's own accent below
-// rather than forced into the section-wide warm wash.
 const CITRUS = '#c96a1f'
 const VARIANT_ACCENT: Record<string, string> = {
   elevate: '#7a9a2e',
@@ -18,64 +14,78 @@ const VARIANT_ACCENT: Record<string, string> = {
 }
 
 export function FruitCrunchersChapter() {
+  const supporting = fruitCrunchers.supportingImage
+
   return (
-    <section
-      className="relative overflow-hidden"
-      style={{ background: 'linear-gradient(175deg, #fdf6e6 0%, #fbe7bc 55%, #f6d495 100%)' }}
-    >
-      <p
-        aria-hidden="true"
-        className="pointer-events-none select-none absolute -top-4 md:top-0 left-1/2 -translate-x-1/2 whitespace-nowrap"
-        style={{
-          fontFamily: 'var(--font-space-grotesk)',
-          fontWeight: 700,
-          fontSize: 'clamp(4.5rem, 15vw, 11rem)',
-          color: 'rgba(120,60,10,0.07)',
-          lineHeight: 1,
-          letterSpacing: '-0.03em',
-        }}
-      >
-        FRUIT CRUNCHERS
-      </p>
+    <section id="fruit-crunchers" className="relative scroll-mt-16 md:scroll-mt-18" style={{ backgroundColor: '#fdf1d6' }}>
+      <div className={G} style={{ paddingTop: '4.5rem', paddingBottom: '4.5rem' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-10">
+          {/* ── LEFT: family story ──────────────────────────────────── */}
+          <div className="lg:col-span-4">
+            <p className="text-label" style={{ color: CITRUS, marginBottom: '0.75rem' }}>03</p>
+            <h2
+              className="font-[family-name:var(--font-space-grotesk)] font-bold text-[var(--color-dark)]"
+              style={{ fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', lineHeight: '1', letterSpacing: '-0.03em' }}
+            >
+              Fruit Crunchers
+            </h2>
+            <div style={{ width: '48px', height: '3px', backgroundColor: CITRUS, marginTop: '1.25rem', marginBottom: '1.5rem' }} />
+            <p className="text-body text-[var(--color-muted)]">
+              {fruitCrunchers.description} All three are built on the same 25mg THC per piece base, with a different secondary cannabinoid, CBD, CBN, or CBG, layered in for each variety.
+            </p>
+          </div>
 
-      <div className={`${G} relative`} style={{ paddingTop: '5rem', paddingBottom: '5rem' }}>
-        <p className="text-label" style={{ color: CITRUS, marginBottom: '0.75rem' }}>03</p>
-        <h2
-          className="font-[family-name:var(--font-space-grotesk)] font-bold text-[var(--color-dark)]"
-          style={{ fontSize: 'clamp(2.5rem, 5.5vw, 4.5rem)', lineHeight: '0.98', letterSpacing: '-0.03em' }}
-        >
-          Fruit Crunchers
-        </h2>
-        <div style={{ width: '48px', height: '3px', backgroundColor: CITRUS, marginTop: '1.25rem', marginBottom: '1.5rem' }} />
-        <p className="text-body text-[var(--color-muted)]" style={{ maxWidth: '58ch' }}>
-          {fruitCrunchers.description}
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 md:gap-8" style={{ marginTop: '3.5rem' }}>
-          {fruitCrunchers.variants.map((v) => {
-            const accent = VARIANT_ACCENT[v.slug] ?? CITRUS
-            return (
-              <div key={v.slug} className="flex flex-col items-center text-center">
-                <div className="w-full max-w-[260px]">
-                  <Image src={v.imageUrl!} alt={v.imageAlt!} width={v.imageWidth!} height={v.imageHeight!} sizes="(max-width: 640px) 70vw, 260px" className="w-full h-auto drop-shadow-xl" />
+          {/* ── CENTER: grouped packages + real supporting photo ───── */}
+          <div className="lg:col-span-5" style={{ marginTop: '3rem' }}>
+            <div className="grid grid-cols-3 items-end justify-items-center" style={{ gap: '0.75rem' }}>
+              {fruitCrunchers.variants.map((v) => (
+                <div key={v.slug} className="w-full max-w-[180px]">
+                  <Image src={v.imageUrl!} alt={v.imageAlt!} width={v.imageWidth!} height={v.imageHeight!} sizes="(max-width: 640px) 30vw, 180px" className="w-full h-auto drop-shadow-xl" />
                 </div>
-                <p className="font-[family-name:var(--font-space-grotesk)] font-semibold" style={{ color: accent, fontSize: '1.25rem', letterSpacing: '-0.01em', marginTop: '1rem' }}>
-                  {v.name}
-                </p>
-                <p className="text-label" style={{ color: 'var(--color-muted)', marginTop: '0.5rem' }}>
-                  {[v.netWeight, v.pieceCount].join(' · ')}
-                </p>
-                <p className="text-label" style={{ color: accent, marginTop: '0.2rem' }}>
-                  {v.perPiece}
-                </p>
-                {v.totalPotency && (
-                  <p className="text-label" style={{ color: 'var(--color-muted)', marginTop: '0.15rem' }}>
-                    {v.totalPotency}
-                  </p>
-                )}
+              ))}
+            </div>
+
+            {supporting && (
+              <div className="w-full mx-auto" style={{ maxWidth: '360px', marginTop: '1.75rem' }}>
+                <Image
+                  src={supporting.url}
+                  alt={supporting.alt}
+                  width={supporting.width}
+                  height={supporting.height}
+                  sizes="(max-width: 640px) 80vw, 360px"
+                  className="w-full h-auto"
+                  style={{ aspectRatio: '16 / 9', objectFit: 'cover' }}
+                />
               </div>
-            )
-          })}
+            )}
+          </div>
+
+          {/* ── RIGHT: verified facts ───────────────────────────────── */}
+          <div className="lg:col-span-3" style={{ marginTop: '3rem' }}>
+            <div className="flex flex-col" style={{ gap: '1.1rem' }}>
+              {fruitCrunchers.variants.map((v) => {
+                const accent = VARIANT_ACCENT[v.slug] ?? CITRUS
+                return (
+                  <div key={v.slug} style={{ borderBottom: '1px solid rgba(120,60,10,0.15)', paddingBottom: '1.1rem' }}>
+                    <p className="font-[family-name:var(--font-space-grotesk)] font-semibold" style={{ color: accent, fontSize: '1.0625rem' }}>
+                      {v.name}
+                    </p>
+                    <p className="text-label" style={{ color: 'var(--color-muted)', marginTop: '0.3rem' }}>
+                      {[v.netWeight, v.pieceCount].join(' · ')}
+                    </p>
+                    <p className="text-label" style={{ color: accent, marginTop: '0.2rem' }}>
+                      {v.perPiece}
+                    </p>
+                    {v.totalPotency && (
+                      <p className="text-label" style={{ color: 'var(--color-muted)', marginTop: '0.15rem' }}>
+                        {v.totalPotency}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-center" style={{ marginTop: '3.5rem' }}>
