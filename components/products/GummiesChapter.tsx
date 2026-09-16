@@ -8,8 +8,7 @@ const gummies = PRODUCT_FAMILIES.find((f) => f.slug === 'precision-crafted-gummi
 
 // Per-variant accent pulled from that variant's own real package color —
 // Focus (red/orange berry art), Relax (deep purple night art), Balance
-// (green forest/watermelon art). Small, restrained nods, not full
-// illustrated backgrounds.
+// (green forest/watermelon art).
 const VARIANT_ACCENT: Record<string, string> = {
   focus: '#e0674a',
   relax: '#8b6fc9',
@@ -17,77 +16,80 @@ const VARIANT_ACCENT: Record<string, string> = {
 }
 
 export function GummiesChapter() {
+  const supporting = gummies.supportingImage
+
   return (
-    <section
-      id="gummies"
-      className="relative overflow-hidden scroll-mt-16 md:scroll-mt-18"
-      style={{
-        backgroundColor: 'var(--color-ink)',
-        // Restrained multi-hue wash referencing the three real package
-        // palettes (red, purple, green) — a CSS gradient, not illustrated
-        // artwork. Kept very low-opacity so the section still reads as
-        // dark/GSX first, tri-color second.
-        backgroundImage:
-          'radial-gradient(ellipse 60% 50% at 15% 10%, rgba(224,103,74,0.16) 0%, rgba(224,103,74,0) 60%),' +
-          'radial-gradient(ellipse 60% 60% at 85% 30%, rgba(139,111,201,0.16) 0%, rgba(139,111,201,0) 60%),' +
-          'radial-gradient(ellipse 70% 60% at 50% 100%, rgba(95,160,106,0.16) 0%, rgba(95,160,106,0) 60%)',
-      }}
-    >
-      <p
-        aria-hidden="true"
-        className="pointer-events-none select-none absolute -top-2 md:top-4 left-1/2 -translate-x-1/2 whitespace-nowrap"
-        style={{
-          fontFamily: 'var(--font-space-grotesk)',
-          fontWeight: 700,
-          fontSize: 'clamp(5.5rem, 18vw, 13rem)',
-          color: 'rgba(250,248,243,0.045)',
-          lineHeight: 1,
-          letterSpacing: '-0.03em',
-        }}
-      >
-        GUMMIES
-      </p>
+    <section id="gummies" className="relative scroll-mt-16 md:scroll-mt-18" style={{ backgroundColor: 'var(--color-ink)' }}>
+      <div className={G} style={{ paddingTop: '4.5rem', paddingBottom: '4.5rem' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-10">
+          {/* ── LEFT: family story ──────────────────────────────────── */}
+          <div className="lg:col-span-4">
+            <p className="text-label" style={{ color: 'rgba(250,248,243,0.5)', marginBottom: '0.5rem' }}>02</p>
+            <p
+              className="font-[family-name:var(--font-space-grotesk)] italic"
+              style={{ color: 'rgba(250,248,243,0.7)', fontSize: 'clamp(1.125rem, 1.6vw, 1.375rem)', fontWeight: 500 }}
+            >
+              Precision Crafted
+            </p>
+            <h2
+              className="font-[family-name:var(--font-space-grotesk)] font-bold text-[var(--color-cream)]"
+              style={{ fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', lineHeight: '1', letterSpacing: '-0.03em', marginTop: '0.25rem' }}
+            >
+              Gummies
+            </h2>
+            <div style={{ width: '48px', height: '3px', backgroundColor: 'var(--color-accent)', marginTop: '1.25rem', marginBottom: '1.5rem' }} />
+            <p className="font-[family-name:var(--font-manrope)] font-light" style={{ color: 'rgba(250,248,243,0.55)', fontSize: '1rem', lineHeight: '1.65' }}>
+              {gummies.description} Each ratio is built around a specific enhancement decision, Sativa, Indica, or Hybrid, not a flavor gimmick.
+            </p>
+          </div>
 
-      <div className={`${G} relative`} style={{ paddingTop: '5rem', paddingBottom: '5rem' }}>
-        <p className="text-label" style={{ color: 'rgba(250,248,243,0.5)', marginBottom: '0.5rem' }}>02</p>
-        <p
-          className="font-[family-name:var(--font-space-grotesk)] italic"
-          style={{ color: 'rgba(250,248,243,0.7)', fontSize: 'clamp(1.25rem, 2vw, 1.625rem)', fontWeight: 500 }}
-        >
-          Precision Crafted
-        </p>
-        <h2
-          className="font-[family-name:var(--font-space-grotesk)] font-bold text-[var(--color-cream)]"
-          style={{ fontSize: 'clamp(2.75rem, 6vw, 5rem)', lineHeight: '0.98', letterSpacing: '-0.03em', marginTop: '0.25rem' }}
-        >
-          Gummies
-        </h2>
-        <div style={{ width: '48px', height: '3px', backgroundColor: 'var(--color-accent)', marginTop: '1.25rem', marginBottom: '1.5rem' }} />
-        <p className="font-[family-name:var(--font-manrope)] font-light" style={{ color: 'rgba(250,248,243,0.55)', fontSize: '1.0625rem', lineHeight: '1.68', maxWidth: '58ch' }}>
-          {gummies.description}
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 md:gap-8" style={{ marginTop: '3.5rem' }}>
-          {gummies.variants.map((v) => {
-            const accent = VARIANT_ACCENT[v.slug] ?? 'var(--color-accent)'
-            return (
-              <div key={v.slug} className="flex flex-col items-center text-center">
-                <div className="w-full max-w-[260px]">
-                  <Image src={v.imageUrl!} alt={v.imageAlt!} width={v.imageWidth!} height={v.imageHeight!} sizes="(max-width: 640px) 70vw, 260px" className="w-full h-auto drop-shadow-2xl" />
+          {/* ── CENTER: grouped packages + real supporting photo ───── */}
+          <div className="lg:col-span-5" style={{ marginTop: '3rem' }}>
+            <div className="grid grid-cols-3 items-end justify-items-center" style={{ gap: '0.75rem' }}>
+              {gummies.variants.map((v) => (
+                <div key={v.slug} className="w-full max-w-[180px]">
+                  <Image src={v.imageUrl!} alt={v.imageAlt!} width={v.imageWidth!} height={v.imageHeight!} sizes="(max-width: 640px) 30vw, 180px" className="w-full h-auto drop-shadow-2xl" />
                 </div>
-                <p className="font-[family-name:var(--font-space-grotesk)] font-semibold" style={{ color: accent, fontSize: '1.25rem', letterSpacing: '-0.01em', marginTop: '1rem' }}>
-                  {v.name}
-                </p>
-                <p className="text-body-sm" style={{ color: 'rgba(250,248,243,0.6)', marginTop: '0.15rem' }}>{v.flavor}</p>
-                <p className="text-label" style={{ color: 'rgba(250,248,243,0.4)', marginTop: '0.5rem' }}>
-                  {v.enhancement}
-                </p>
-                <p className="text-label" style={{ color: accent, marginTop: '0.2rem' }}>
-                  {v.ratio}
-                </p>
+              ))}
+            </div>
+
+            {supporting && (
+              <div className="w-full mx-auto" style={{ maxWidth: '320px', marginTop: '1.75rem' }}>
+                <Image
+                  src={supporting.url}
+                  alt={supporting.alt}
+                  width={supporting.width}
+                  height={supporting.height}
+                  sizes="(max-width: 640px) 70vw, 320px"
+                  className="w-full h-auto"
+                  style={{ aspectRatio: '4 / 3', objectFit: 'cover', objectPosition: '50% 30%' }}
+                />
               </div>
-            )
-          })}
+            )}
+          </div>
+
+          {/* ── RIGHT: verified facts ───────────────────────────────── */}
+          <div className="lg:col-span-3" style={{ marginTop: '3rem' }}>
+            <div className="flex flex-col" style={{ gap: '1.1rem' }}>
+              {gummies.variants.map((v) => {
+                const accent = VARIANT_ACCENT[v.slug] ?? 'var(--color-accent)'
+                return (
+                  <div key={v.slug} style={{ borderBottom: '1px solid rgba(250,248,243,0.1)', paddingBottom: '1.1rem' }}>
+                    <p className="font-[family-name:var(--font-space-grotesk)] font-semibold" style={{ color: accent, fontSize: '1.0625rem' }}>
+                      {v.name}
+                    </p>
+                    <p className="text-body-sm" style={{ color: 'rgba(250,248,243,0.6)', marginTop: '0.15rem' }}>{v.flavor}</p>
+                    <p className="text-label" style={{ color: 'rgba(250,248,243,0.45)', marginTop: '0.3rem' }}>
+                      {v.enhancement}
+                    </p>
+                    <p className="text-label" style={{ color: accent, marginTop: '0.15rem' }}>
+                      {v.ratio}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-center" style={{ marginTop: '3.5rem' }}>
