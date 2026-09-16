@@ -65,6 +65,23 @@ export function ProductFamilySection({ family, index, emphasis = 'standard', ton
     </p>
   )
 
+  // Family-level potency + package facts — given noticeably more visual
+  // weight (text-h4) than ordinary package metadata (text-label), since
+  // potency is an explicit product differentiator, not incidental detail.
+  const potencyBlock = (family.potencyValue || family.packageFacts) && (
+    <div className="mt-4">
+      {family.potencyValue && (
+        <>
+          <p className="text-label" style={{ color: 'var(--color-muted)' }}>{family.potencyLabel}</p>
+          <p className="text-h4 text-[var(--color-dark)] mt-1">{family.potencyValue}</p>
+        </>
+      )}
+      {family.packageFacts && (
+        <p className="text-label mt-2" style={{ color: 'var(--color-muted)' }}>{family.packageFacts}</p>
+      )}
+    </div>
+  )
+
   return (
     <section
       id={id}
@@ -94,6 +111,7 @@ export function ProductFamilySection({ family, index, emphasis = 'standard', ton
             <h2 className="text-h2 text-[var(--color-dark)]">{family.name}</h2>
             <div style={{ width: '40px', height: '2px', backgroundColor: 'var(--color-green)', margin: '0.9rem auto 0' }} />
             <p className="text-body text-[var(--color-muted)] mt-3">{family.description}</p>
+            {potencyBlock}
           </div>
           {/* mx-auto block (not flex justify-center) so this wrapper has a
               real definite width for ProductShowcaseCard's own internal
@@ -118,6 +136,7 @@ export function ProductFamilySection({ family, index, emphasis = 'standard', ton
               </h2>
               <div style={{ width: '40px', height: '2px', backgroundColor: 'var(--color-green)', marginTop: '0.9rem' }} />
               <p className="text-body text-[var(--color-muted)] mt-3 max-w-[42ch]">{family.description}</p>
+              {potencyBlock}
             </div>
 
             {/* Product row: horizontal on desktop, stacks under the intro below xl */}
