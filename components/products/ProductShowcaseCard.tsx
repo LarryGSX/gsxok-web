@@ -27,6 +27,15 @@ interface ProductShowcaseCardProps {
    * gap instead — mt-auto would just collapse to 0 there.
    */
   alignToRow?: boolean
+  /**
+   * Hides the small ratio/perPiece detail line below sm (mobile), showing
+   * only name + enhancement there. Used for Fruit Crunchers only — the
+   * family-level "Available Potencies" fact already states the 25/50/100mg
+   * range, so the per-piece dose breakdown doesn't need to repeat under
+   * every package in the narrow 3-up mobile row. The detail line still
+   * shows normally at sm+ (unchanged from desktop/tablet).
+   */
+  hideDetailOnMobile?: boolean
 }
 
 const maxWidthClass: Record<NonNullable<ProductShowcaseCardProps['size']>, string> = {
@@ -36,14 +45,18 @@ const maxWidthClass: Record<NonNullable<ProductShowcaseCardProps['size']>, strin
   large: 'max-w-[360px]',
 }
 
+// Mobile hint is ~30vw across the board now that multi-product rows are
+// always 3-up, even on the smallest phones (a single-product row like The
+// Hammer is capped by max-w-xs regardless, so the wider desktop hint there
+// still applies well before 30vw would matter).
 const imageSizes: Record<NonNullable<ProductShowcaseCardProps['size']>, string> = {
-  compact: '(max-width: 768px) 36vw, 170px',
-  default: '(max-width: 768px) 50vw, 240px',
-  medium: '(max-width: 768px) 50vw, 280px',
-  large: '(max-width: 768px) 65vw, 360px',
+  compact: '(max-width: 640px) 30vw, 170px',
+  default: '(max-width: 640px) 30vw, 240px',
+  medium: '(max-width: 640px) 30vw, 280px',
+  large: '(max-width: 640px) 30vw, 360px',
 }
 
-export function ProductShowcaseCard({ variant, size = 'default', alignToRow = false }: ProductShowcaseCardProps) {
+export function ProductShowcaseCard({ variant, size = 'default', alignToRow = false, hideDetailOnMobile = false }: ProductShowcaseCardProps) {
   // netWeight/pieceCount are shown once at the family level (see
   // ProductFamilySection's `facts`), not repeated on every card. enhancement
   // (the formulation name — "Sativa Enhanced", "THC + CBD") gets its own
@@ -81,8 +94,11 @@ export function ProductShowcaseCard({ variant, size = 'default', alignToRow = fa
       {/* mb-8 is the guaranteed minimum gap to the CTA below, on every card,
           at every breakpoint — not just whatever's left over after mt-auto
           redistributes row-stretch space (which could be near-zero when
-          sibling cards have similarly short text). */}
-      <div className="flex flex-col items-center mb-8">
+          sibling cards have similarly short text). Below sm, a card whose
+          CTA is hidden (alignToRow — see Button below) has nothing left to
+          space away from, so that gap tightens to mb-2 there instead of
+          leaving dead trailing space in the mobile 3-up row. */}
+      <div className={`flex flex-col items-center ${alignToRow ? 'mb-2 sm:mb-8' : 'mb-8'}`}>
         <h3 className="text-h4 text-[var(--color-dark)] mt-5">
           {variant.name}
         </h3>
@@ -98,20 +114,27 @@ export function ProductShowcaseCard({ variant, size = 'default', alignToRow = fa
         )}
 
         {secondaryFacts.length > 0 && (
-          <p className="text-label text-[var(--color-muted)] mt-2 max-w-[26ch]">
+          <p className={`text-label text-[var(--color-muted)] mt-2 max-w-[26ch] ${hideDetailOnMobile ? 'hidden sm:block' : ''}`}>
             {secondaryFacts.join(' · ')}
           </p>
         )}
       </div>
 
-      <Button
-        href="/find-gsx"
-        variant="primary"
-        size="sm"
-        className={alignToRow ? 'sm:mt-auto' : ''}
-      >
-        Find This Product Near You
-      </Button>
+      {/* Below sm, a multi-product row (alignToRow) replaces this with one
+          family-level CTA under the whole row (see ProductFamilySection) —
+          three individual buttons under narrow 3-up columns would be
+          cramped and repetitive. Reappears at sm+ where there's room.
+          The visibility toggle lives on this wrapper div, not the Button
+          itself — Button's own base classes always include `inline-flex`
+          unconditionally, which sits at the same CSS specificity as a bare
+          `hidden` and can win regardless of class order in the JSX, so
+          `hidden`/`sm:block` needs a plain element with no competing
+          display class of its own. */}
+      <div className={alignToRow ? 'hidden sm:block sm:mt-auto' : ''}>
+        <Button href="/find-gsx" variant="primary" size="sm">
+          Find This Product Near You
+        </Button>
+      </div>
     </div>
   )
 }
