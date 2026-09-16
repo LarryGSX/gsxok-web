@@ -16,22 +16,11 @@ const FAMILY_EMPHASIS: Record<string, 'flagship' | 'standard' | 'simple'> = {
   'chocolate-bites': 'flagship',
   'precision-crafted-gummies': 'standard',
   'fruit-crunchers': 'standard',
-  // The Hammer uses layout: 'solo' below, which has its own padding and
-  // ignores emphasis entirely — this value is a harmless placeholder.
-  'the-hammer': 'standard',
+  'the-hammer': 'simple',
   // 'simple' emphasis's tighter section padding is the desired effect here;
   // its other effects (cardSize fallback, intro/row split) don't apply since
   // this family already sets its own cardSize below and isn't flagship.
   'chocolate-bites-singles': 'simple',
-}
-
-// The Hammer is the page's only single-SKU family — it gets the centered
-// "solo" closing treatment (see ProductFamilySection) instead of the
-// row template every other family uses, so it reads as a deliberate final
-// product-family moment rather than one small card in a row with less
-// room than everyone else.
-const FAMILY_LAYOUT: Record<string, 'row' | 'solo'> = {
-  'the-hammer': 'solo',
 }
 
 // Matches the footer's existing "/products#gummies" and "/products#chocolates"
@@ -43,12 +32,9 @@ const FAMILY_ANCHOR_IDS: Record<string, string> = {
 
 // Overrides artwork size independent of emphasis (see ProductFamilySection's
 // cardSize prop) — Chocolate Bites Singles keeps standard emphasis/spacing
-// but uses slightly smaller artwork than Gummies/Fruit Crunchers. The
-// Hammer's 'xlarge' is sized for its solo centered layout, where it's the
-// section's entire visual focus rather than one card sharing a row.
-const FAMILY_CARD_SIZE: Record<string, 'compact' | 'default' | 'medium' | 'large' | 'xlarge'> = {
+// but uses slightly smaller artwork than Gummies/Fruit Crunchers.
+const FAMILY_CARD_SIZE: Record<string, 'compact' | 'default' | 'medium' | 'large'> = {
   'chocolate-bites-singles': 'compact',
-  'the-hammer': 'xlarge',
 }
 
 // Nudges the left intro block up (px, at xl+ only) so it reads balanced
@@ -92,7 +78,6 @@ export default function ProductsPage() {
             id={FAMILY_ANCHOR_IDS[family.slug]}
             cardSize={FAMILY_CARD_SIZE[family.slug]}
             introOffset={FAMILY_INTRO_OFFSET[family.slug]}
-            layout={FAMILY_LAYOUT[family.slug]}
           />
         ))}
 
