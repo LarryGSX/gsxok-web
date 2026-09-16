@@ -7,6 +7,7 @@ import { ChocolateChapter } from '@/components/products/ChocolateChapter'
 import { GummiesChapter } from '@/components/products/GummiesChapter'
 import { FruitCrunchersChapter } from '@/components/products/FruitCrunchersChapter'
 import { HammerChapter } from '@/components/products/HammerChapter'
+import { PRODUCT_FAMILIES } from '@/lib/products/catalog'
 
 export const metadata = {
   title: 'Products',
@@ -22,6 +23,17 @@ const G = 'w-full max-w-[1280px] mx-auto px-6 md:px-16 xl:px-24'
 // (not pulled from the same Sanity field Homepage uses) so this page's
 // hero stays stable if that CMS field is ever changed for the Homepage.
 const LINEUP_PHOTO_URL = 'https://cdn.sanity.io/images/o7wavkxv/production/b9b67322f08a0147d0f1b71056f5c7682b9892ad-1672x941.webp'
+
+// One representative real package per family, used as small wayfinding
+// thumbnails in the hero — same approved artwork already used in each
+// family's own chapter, not new imagery.
+const [chocolateFamily, , gummiesFamily, fruitCrunchersFamily, hammerFamily] = PRODUCT_FAMILIES
+const HERO_FAMILY_LINKS = [
+  { href: '#chocolates', label: 'Chocolate Bites', variant: chocolateFamily.variants[1] },
+  { href: '#gummies', label: 'Gummies', variant: gummiesFamily.variants[0] },
+  { href: '#fruit-crunchers', label: 'Fruit Crunchers', variant: fruitCrunchersFamily.variants[0] },
+  { href: '#hammer', label: 'The Hammer', variant: hammerFamily.variants[0] },
+]
 
 export default function ProductsPage() {
   return (
@@ -59,6 +71,35 @@ export default function ProductsPage() {
                 >
                   Find GSX →
                 </Link>
+              </div>
+
+              {/* Wayfinding strip — real package thumbnails, one per family,
+                  jumping straight to that family's chapter. */}
+              <div className="flex flex-wrap items-center gap-6" style={{ marginTop: '2.75rem' }}>
+                {HERO_FAMILY_LINKS.map((f) => (
+                  <Link
+                    key={f.href}
+                    href={f.href}
+                    className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:rounded-sm"
+                  >
+                    <div className="w-9 h-9 shrink-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(250,248,243,0.06)' }}>
+                      <Image
+                        src={f.variant.imageUrl!}
+                        alt=""
+                        width={f.variant.imageWidth!}
+                        height={f.variant.imageHeight!}
+                        sizes="36px"
+                        className="w-7 h-7 object-contain"
+                      />
+                    </div>
+                    <span
+                      className="text-label group-hover:text-[var(--color-cream)] transition-colors duration-150"
+                      style={{ color: 'rgba(250,248,243,0.45)' }}
+                    >
+                      {f.label}
+                    </span>
+                  </Link>
+                ))}
               </div>
             </div>
             <div className="flex items-center justify-center w-full" style={{ paddingBottom: '2rem' }}>
