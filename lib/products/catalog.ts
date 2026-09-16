@@ -37,22 +37,27 @@ export interface ProductVariant {
   placeholder?: boolean
 }
 
+/** A labeled fact shown in the family intro column (e.g. potency, package size). */
+export interface ProductFamilyFact {
+  label: string
+  value: string
+  /** 'high' gets stronger visual weight (potency figures); omit for ordinary package facts. */
+  emphasis?: 'high'
+}
+
 export interface ProductFamily {
   name: string
   slug: string
   description: string
   variants: ProductVariant[]
   /**
-   * Label for the family-level potency line — "Available Potencies" for
-   * families sold in multiple THC strengths (Chocolate Bites, Gummies,
-   * Fruit Crunchers), "Potency" for a single-strength family (Singles, The
-   * Hammer).
+   * Labeled facts shown in the family intro, in display order — potency
+   * figures (emphasis: 'high') and package size/piece count. Rendered with
+   * noticeably more visual weight than the small per-card facts line, since
+   * potency and package size are explicit product-differentiating
+   * information, not incidental metadata.
    */
-  potencyLabel?: string
-  /** The potency value itself, shown with more visual weight than ordinary package metadata. */
-  potencyValue?: string
-  /** Shared package size / piece count for the family, shown once rather than repeated on every card. */
-  packageFacts?: string
+  facts?: ProductFamilyFact[]
 }
 
 export const PRODUCT_FAMILIES: ProductFamily[] = [
@@ -60,9 +65,10 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
     name: 'Chocolate Bites',
     slug: 'chocolate-bites',
     description: 'GSX’s flagship chocolate line, produced in-house in Chelsea, Oklahoma in Caramel, Solid Milk Chocolate, and Peanut Butter varieties.',
-    potencyLabel: 'Available Potencies',
-    potencyValue: '25mg / 50mg / 100mg THC per piece',
-    packageFacts: '80g Bag · 10 Pieces',
+    facts: [
+      { label: 'Available Potencies', value: '25mg / 50mg / 100mg THC per piece', emphasis: 'high' },
+      { label: 'Package', value: '80g Bag · 10 Pieces' },
+    ],
     variants: [
       {
         name: 'Caramel Bites',
@@ -103,9 +109,10 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
     name: 'Chocolate Bites Singles',
     slug: 'chocolate-bites-singles',
     description: 'Single-serve versions of the GSX Chocolate Bites lineup in a smaller individual format.',
-    potencyLabel: 'Potency',
-    potencyValue: '100mg THC per piece',
-    packageFacts: '8g (0.28oz) · 1 Piece',
+    facts: [
+      { label: 'Potency', value: '100mg THC per piece', emphasis: 'high' },
+      { label: 'Package', value: '8g (0.28oz) · 1 Piece' },
+    ],
     variants: [
       {
         name: 'Caramel Bite',
@@ -149,9 +156,10 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
     name: 'Precision Crafted Gummies',
     slug: 'precision-crafted-gummies',
     description: 'Three gummy formulations in distinct cannabinoid ratios, with Focus, Relax, and Balance varieties.',
-    potencyLabel: 'Available Potencies',
-    potencyValue: '25mg / 50mg / 100mg THC per gummy',
-    packageFacts: '50g Bag (1.75oz)',
+    facts: [
+      { label: 'Available Potencies', value: '25mg / 50mg / 100mg THC per gummy', emphasis: 'high' },
+      { label: 'Package', value: '50g Bag (1.75oz)' },
+    ],
     variants: [
       {
         name: 'Focus',
@@ -195,9 +203,10 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
     name: 'Fruit Crunchers',
     slug: 'fruit-crunchers',
     description: 'GSX’s freeze-dried candy line, available in Elevate, Relax, and Boost varieties.',
-    potencyLabel: 'Available Potencies',
-    potencyValue: '25mg / 50mg / 100mg THC per piece',
-    packageFacts: '60g Bag (2.12oz) · 40 Pieces',
+    facts: [
+      { label: 'Available Potencies', value: '25mg / 50mg / 100mg THC per piece', emphasis: 'high' },
+      { label: 'Package', value: '60g Bag (2.12oz) · 40 Pieces' },
+    ],
     variants: [
       {
         name: 'Elevate',
@@ -241,16 +250,18 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
     name: 'The Hammer',
     slug: 'the-hammer',
     description: 'A high-potency chocolate bar divided into individual squares for clearly portioned servings.',
-    potencyLabel: 'Potency',
-    // Total THC (4200mg) reconciles exactly with 175mg x 24 squares and is
-    // shown here. The package also prints a 1000mg CBD total, which does
-    // NOT reconcile with 40mg CBD/square x 24 squares (960mg) — that
-    // inconsistency exists on the approved packaging itself. Per direction,
-    // we do not compute or silently correct it, and we do not publish any
-    // total CBD figure until that's resolved with the source material — so
-    // no CBD total appears in this string. Flagged in the completion report.
-    potencyValue: '175mg THC / 40mg CBD per square · 4200mg THC per bar',
-    packageFacts: '1 Bar · 24 Squares',
+    facts: [
+      { label: 'Package', value: '1 Bar · 24 Squares' },
+      { label: 'Per Square', value: '175mg THC / 40mg CBD', emphasis: 'high' },
+      // Total THC reconciles exactly (175mg x 24 squares = 4200mg) and is
+      // shown here. The package also prints a 1000mg CBD total, which does
+      // NOT reconcile with 40mg CBD/square x 24 squares (960mg) — that
+      // inconsistency exists on the approved packaging itself. Per
+      // direction, we do not compute or silently correct it, and no total
+      // CBD figure is published until that conflict is explicitly resolved
+      // with the source material. Flagged in the completion report.
+      { label: 'Total THC', value: '4200mg THC per bar', emphasis: 'high' },
+    ],
     variants: [
       {
         name: 'The Hammer',
