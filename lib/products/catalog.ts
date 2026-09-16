@@ -34,17 +34,26 @@ export interface ProductVariant {
   /** Per-piece or per-square potency as printed on the package. */
   perPiece?: string
   /**
-   * Total potency per bag/bar as printed on the package. Only set where the
-   * real packaging actually prints a total (Fruit Crunchers, The Hammer) —
-   * Chocolate Bites and Gummies packages print no per-piece or total mg
-   * figure at all, confirmed by direct inspection of the package art, so
-   * this is intentionally left unset there rather than computed or guessed.
-   * Not always exactly perPiece × pieceCount — see The Hammer, whose real
-   * package prints 1000mg CBD total alongside 40mg CBD/square × 24 squares
-   * (960mg); that inconsistency exists on the approved packaging itself and
-   * is reproduced as-is rather than silently corrected.
+   * Total potency per bag as printed on the package, where every cannabinoid
+   * in the total reconciles cleanly with perPiece x pieceCount. Only set for
+   * Fruit Crunchers (25mg x 40 = 1000mg THC, 10mg x 40 = 400mg secondary
+   * cannabinoid — both check out exactly). Chocolate Bites and Gummies
+   * packages print no per-piece or total mg figure at all, confirmed by
+   * direct inspection of the package art, so this is intentionally left
+   * unset there rather than computed or guessed.
    */
   totalPotency?: string
+  /**
+   * Total THC per bar, set only for The Hammer, where it reconciles exactly
+   * (175mg x 24 squares = 4200mg, confirmed by direct inspection of the real
+   * package). The package's front-of-pack total CBD figure (1000mg) does
+   * NOT reconcile with 40mg CBD/square x 24 squares (960mg) — that
+   * inconsistency exists on the approved packaging itself. Per direction, we
+   * do not compute or silently correct it, and we do not publish a total CBD
+   * figure at all until that's resolved with the source material — so no
+   * total-CBD field exists here. Flagged in the completion report.
+   */
+  totalTHC?: string
   /** True when no approved package artwork exists yet. Renders a labeled placeholder instead of inventing artwork. */
   placeholder?: boolean
 }
@@ -54,6 +63,18 @@ export interface ProductFamily {
   slug: string
   description: string
   variants: ProductVariant[]
+  /**
+   * A real, authentic supporting photo for this family's campaign panel
+   * (production-in-progress or product-in-bulk), sourced from the same
+   * Sanity asset library as the package art. Omitted entirely for families
+   * where no such photo exists (The Hammer) rather than inventing one.
+   */
+  supportingImage?: {
+    url: string
+    width: number
+    height: number
+    alt: string
+  }
 }
 
 export const PRODUCT_FAMILIES: ProductFamily[] = [
@@ -61,6 +82,12 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
     name: 'Chocolate Bites',
     slug: 'chocolate-bites',
     description: 'GSX’s flagship chocolate line, produced in-house in Chelsea, Oklahoma in Caramel, Solid Milk Chocolate, and Peanut Butter varieties.',
+    supportingImage: {
+      url: 'https://cdn.sanity.io/images/o7wavkxv/production/ce90328c183259ac5bb6b4bddbe1c33f6366752e-1152x1536.jpg',
+      width: 1152,
+      height: 1536,
+      alt: 'Freshly demolded GSX chocolate bites in a production bin',
+    },
     variants: [
       {
         name: 'Caramel Bites',
@@ -144,6 +171,12 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
     name: 'Precision Crafted Gummies',
     slug: 'precision-crafted-gummies',
     description: 'Three gummy formulations in distinct cannabinoid ratios, with Focus, Relax, and Balance varieties.',
+    supportingImage: {
+      url: 'https://cdn.sanity.io/images/o7wavkxv/production/60706220ee17d244c553e9c1c46d065346a8466d-1152x1536.jpg',
+      width: 1152,
+      height: 1536,
+      alt: 'Real GSX gummy mold trays in production',
+    },
     variants: [
       {
         name: 'Focus',
@@ -187,6 +220,12 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
     name: 'Fruit Crunchers',
     slug: 'fruit-crunchers',
     description: 'GSX’s freeze-dried candy line, available in Elevate, Relax, and Boost varieties.',
+    supportingImage: {
+      url: 'https://cdn.sanity.io/images/o7wavkxv/production/03b7d7ac5d70c5943ef07e65c7ba1da21d886d5e-1536x710.jpg',
+      width: 1536,
+      height: 710,
+      alt: 'Real GSX Fruit Crunchers pouches on the production sealing line',
+    },
     variants: [
       {
         name: 'Elevate',
@@ -230,6 +269,9 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
     name: 'The Hammer',
     slug: 'the-hammer',
     description: 'A high-potency chocolate bar divided into individual squares for clearly portioned servings.',
+    // No authentic supporting photo exists for The Hammer beyond its own
+    // package art — per direction, this stays product-led rather than
+    // inventing supporting imagery.
     variants: [
       {
         name: 'The Hammer',
@@ -241,11 +283,12 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
         netWeight: '8g (2.82oz)',
         pieceCount: '1 Bar, 24 Squares',
         perPiece: '175mg THC / 40mg CBD per square',
-        // The real package prints this total directly (front-of-pack: "4200mg
-        // THC / 1000mg CBD"). Note 40mg x 24 squares = 960mg, not 1000mg —
-        // that inconsistency is on the approved packaging itself, not
-        // introduced here. Both figures are reproduced exactly as printed.
-        totalPotency: '4200mg THC / 1000mg CBD per bar',
+        // Printed directly on the real package, front-of-pack, and
+        // reconciles exactly: 175mg x 24 squares = 4200mg. The package's
+        // separate 1000mg CBD total does not reconcile (40mg x 24 = 960mg)
+        // and is intentionally not published anywhere in this file — see
+        // the totalTHC field comment above.
+        totalTHC: '4200mg THC per bar',
       },
     ],
   },
