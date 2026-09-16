@@ -47,9 +47,10 @@ const imageSizes: Record<NonNullable<ProductShowcaseCardProps['size']>, string> 
 }
 
 export function ProductShowcaseCard({ variant, size = 'default', alignToRow = false }: ProductShowcaseCardProps) {
-  const facts = [variant.enhancement, variant.ratio, variant.netWeight, variant.pieceCount, variant.perPiece].filter(
-    Boolean
-  )
+  // netWeight/pieceCount are intentionally excluded here — they're now
+  // shown once at the family level (see ProductFamilySection's
+  // packageFacts) instead of repeated on every card in the row.
+  const facts = [variant.enhancement, variant.ratio, variant.perPiece].filter(Boolean)
 
   return (
     // h-full + the parent row's default grid stretch means every card in a
