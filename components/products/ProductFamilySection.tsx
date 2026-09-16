@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { Button } from '@/components/ui/Button'
 import { ProductShowcaseCard } from './ProductShowcaseCard'
 import type { ProductFamily } from '@/lib/products/catalog'
 
@@ -37,16 +38,17 @@ export function ProductFamilySection({ family, index, emphasis = 'standard', ton
   // spec allows; flagship goes slightly past that (26/74) specifically so
   // its artwork still reads as visibly larger than standard's, which is
   // already at the spec ceiling. The split only activates at xl (1280px+);
-  // below that, three fixed-width cards in a ~65-70% column would be too
-  // cramped to read as a "horizontal editorial row" rather than "squeezed",
-  // so it stacks instead (full-width row, same responsive column count as
-  // before this pass).
+  // below that it stacks (full width row) but the row itself is always the
+  // same column count regardless of viewport — see rowCols below.
   const resolvedCardSize = cardSize ?? (emphasis === 'flagship' ? 'large' : emphasis === 'simple' ? 'default' : 'medium')
   const count = family.variants.length
   const introSplit = emphasis === 'flagship' ? 'xl:grid-cols-[26fr_74fr]' : 'xl:grid-cols-[30fr_70fr]'
 
-  const rowCols =
-    count >= 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : count === 2 ? 'sm:grid-cols-2' : ''
+  // Always the same column count from the smallest phone width up — a
+  // multi-product family shows all of its products side by side on every
+  // screen size, never stacked vertically, so the whole family stays
+  // visible together and the page doesn't balloon in height on mobile.
+  const rowCols = count >= 3 ? 'grid-cols-3' : count === 2 ? 'grid-cols-2' : 'grid-cols-1'
 
   // Small numeral eyebrow ("01"-"05") above every family heading — a
   // restrained editorial rhythm device so five sections read as five
@@ -111,16 +113,35 @@ export function ProductFamilySection({ family, index, emphasis = 'standard', ton
             {factsBlock}
           </div>
 
-          {/* Product row: horizontal on desktop, stacks under the intro below xl */}
+          {/* Product row: always horizontal (see rowCols), the whole family
+              row sits under the intro on every screen size below xl */}
           <div
-            className={`grid grid-cols-1 ${rowCols} gap-x-6 gap-y-10 mt-8 xl:mt-0 ${
+            className={`grid ${rowCols} gap-x-3 sm:gap-x-6 gap-y-10 mt-8 xl:mt-0 ${
               count === 1 ? 'max-w-xs xl:max-w-none' : ''
             }`}
           >
             {family.variants.map((variant) => (
-              <ProductShowcaseCard key={variant.slug} variant={variant} size={resolvedCardSize} alignToRow={count > 1} />
+              <ProductShowcaseCard
+                key={variant.slug}
+                variant={variant}
+                size={resolvedCardSize}
+                alignToRow={count > 1}
+                hideDetailOnMobile={family.slug === 'fruit-crunchers'}
+              />
             ))}
           </div>
+
+          {/* Mobile-only consolidated CTA — below sm, three individual
+              per-card buttons under narrow 3-up columns would be cramped
+              and repetitive, so one family-level CTA replaces them here.
+              Desktop/tablet (sm+) keeps the individual per-card CTAs. */}
+          {count > 1 && (
+            <div className="sm:hidden flex justify-center mt-6">
+              <Button href="/find-gsx" variant="primary" size="lg">
+                {`Find ${family.name} Near You`}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </section>
