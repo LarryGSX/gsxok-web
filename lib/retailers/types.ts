@@ -38,9 +38,9 @@ export interface RetailerWithDistance extends Retailer {
   distanceMiles?: number
 }
 
-// 'mock' (lib/retailers/catalog.ts's placeholder data) is only ever
-// returned in non-production runs — see lib/retailers/getRetailers.ts.
-// A production build with zero real Sanity retailers returns 'unavailable'
-// instead, which RetailerLocator renders as a truthful empty state rather
-// than falling back to placeholder stores.
-export type RetailerDataSource = 'sanity' | 'mock' | 'unavailable'
+// 'catalog' is the real retailer list in lib/retailers/catalog.ts (parsed
+// from the GSX customer spreadsheet) — see lib/retailers/getRetailers.ts.
+// 'unavailable' is only reachable if that array is ever emptied out
+// entirely with nothing in Sanity either; RetailerLocator renders it as a
+// truthful empty state rather than falling back to placeholder stores.
+export type RetailerDataSource = 'sanity' | 'catalog' | 'unavailable'
