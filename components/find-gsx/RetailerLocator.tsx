@@ -8,8 +8,11 @@ import { RetailerResult } from './RetailerResult'
 // The Find GSX locator: a ZIP-code search plus a full retailer directory.
 // No map — see the earlier Mapbox implementation this replaced. The
 // primary flow is deliberately simple: enter a ZIP, see the nearest
-// eligible retailers and their addresses; browse the full list below that
-// without searching at all.
+// eligible retailers and their addresses; browse the full list separately,
+// collapsed by default (see "Browse all GSX retailers" below) — the two
+// are intentionally never blended: ZIP results are distance-sorted with an
+// approximate-mileage figure, the full directory is alphabetical/grouped by
+// city with no distance shown at all.
 
 const RESULTS_PAGE_SIZE = 5
 
@@ -33,9 +36,24 @@ function sortByCity(list: Retailer[]): Retailer[] {
   return [...list].sort((a, b) => a.city.localeCompare(b.city) || a.name.localeCompare(b.name))
 }
 
+// baseList is already sorted city-then-name, so grouping via a Map (which
+// preserves insertion order) naturally yields cities in alphabetical order,
+// each with its retailers already in alphabetical order — no re-sorting
+// needed here.
+function groupByCity(list: Retailer[]): [string, Retailer[]][] {
+  const groups = new Map<string, Retailer[]>()
+  for (const r of list) {
+    const existing = groups.get(r.city)
+    if (existing) existing.push(r)
+    else groups.set(r.city, [r])
+  }
+  return Array.from(groups.entries())
+}
+
 export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps) {
   const zipInputId = useId()
   const zipErrorId = useId()
+  const directoryId = useId()
 
   const [zip, setZip] = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -47,8 +65,12 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
   // results block below can key off it and replay its entrance transition
   // even when searching the same ZIP twice in a row.
   const [searchNonce, setSearchNonce] = useState(0)
+  // Independent of all ZIP-search state above — expanding/collapsing the
+  // full directory never touches or resets the current search.
+  const [showDirectory, setShowDirectory] = useState(false)
 
   const baseList = useMemo(() => sortByCity(retailers), [retailers])
+  const cityGroups = useMemo(() => groupByCity(baseList), [baseList])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -88,9 +110,10 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
     }
   }
 
-  // Production with zero real Sanity retailers — a truthful "we don't have
-  // this yet" state, never placeholder stores standing in for real ones.
-  // Unchanged from the map-based build: approved as-is, not being redesigned.
+  // Only reachable if the real retailer catalog were ever emptied out with
+  // nothing in Sanity either — a truthful "we don't have this yet" state,
+  // never placeholder stores standing in for real ones. Unchanged from the
+  // map-based build: approved as-is, not being redesigned.
   if (dataSource === 'unavailable') {
     return (
       <section
@@ -137,33 +160,29 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
             animation: fgResultsIn 300ms cubic-bezier(0.0, 0.0, 0.2, 1.0) both;
           }
 
-          /* The full "All GSX retailers" directory becomes a 2-column
-             grid at desktop widths so it reads as a substantial, full-
-             width section rather than one narrow vertical strip — but
-             this is a grid of retailer rows within a single-column page
-             flow, not a page-level left/right split. Collapses to one
-             column below 1024px (tablet and mobile), per spec. */
-          .fg-directory-grid {
-            display: grid;
-            grid-template-columns: 1fr;
+          /* The expanded "Browse all GSX retailers" directory flows into a
+             balanced 2-column layout at desktop widths via CSS multi-column
+             (not CSS Grid) — city groups vary in how many retailers they
+             contain, and columns naturally balance uneven group sizes
+             without needing a fixed row/column template. Single column
+             below 1024px (tablet and mobile), per spec. */
+          .fg-directory-columns {
+            column-count: 1;
           }
           @media (min-width: 1024px) {
-            .fg-directory-grid {
-              grid-template-columns: 1fr 1fr;
+            .fg-directory-columns {
+              column-count: 2;
               column-gap: 3rem;
             }
           }
+          .fg-city-group {
+            break-inside: avoid-column;
+            display: inline-block;
+            width: 100%;
+            vertical-align: top;
+            margin-bottom: 2rem;
+          }
         `}</style>
-
-        {dataSource === 'mock' && (
-          <div
-            className="text-label px-4 py-2.5 mb-8"
-            style={{ color: 'var(--color-muted)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-cream-2)' }}
-            role="status"
-          >
-            Development preview: showing placeholder retailer data, not real GSX retailers
-          </div>
-        )}
 
         {/* ZIP search — prominent but constrained, not a full-bleed hero
             control. */}
@@ -262,19 +281,45 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
           </div>
         )}
 
-        {/* All GSX retailers — always browseable, no search required.
-            Full content width, laid out as a 2-column grid of rows at
-            desktop so it reads as a substantial section rather than a
-            narrow strip. Never shows distance and stays in alphabetical
-            (city, then name) order — a distinct section from the search
-            results above, never blended together. */}
+        {/* Browse all GSX retailers — collapsed by default, independent of
+            any ZIP search above (expanding/collapsing this never touches
+            searchedZip/nearestResults). Grouped by city, alphabetical
+            throughout, no distance shown — a distinct section from the
+            ZIP results above, never blended together. */}
         <div className="mt-12">
-          <h2 className="text-h4 text-[var(--color-dark)]">All GSX retailers</h2>
-          <ul className="fg-directory-grid mt-4 border border-[var(--color-border)]">
-            {baseList.map((r) => (
-              <RetailerResult key={r.id} retailer={r} />
-            ))}
-          </ul>
+          <h2 className="text-h4 text-[var(--color-dark)]">Browse all GSX retailers</h2>
+          <p className="text-body-sm mt-1" style={{ color: 'var(--color-muted)', maxWidth: '56ch' }}>
+            View current GSX retailer locations across Oklahoma
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowDirectory((v) => !v)}
+            aria-expanded={showDirectory}
+            aria-controls={directoryId}
+            className="text-button mt-4 px-5 h-11 bg-transparent text-[var(--color-dark)] border border-[var(--color-dark)] hover:bg-[var(--color-dark)] hover:text-[var(--color-cream)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)]"
+          >
+            {showDirectory ? 'Hide Retailers' : 'Show All Retailers'}
+          </button>
+
+          {showDirectory && (
+            <div id={directoryId} className="fg-directory-columns mt-8">
+              {cityGroups.map(([city, list]) => (
+                <div key={city} className="fg-city-group">
+                  <h3
+                    className="text-h4"
+                    style={{ color: 'var(--color-dark)', textTransform: 'uppercase', letterSpacing: '0.04em' }}
+                  >
+                    {city}
+                  </h3>
+                  <ul className="mt-2 border border-[var(--color-border)]">
+                    {list.map((r) => (
+                      <RetailerResult key={r.id} retailer={r} />
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
