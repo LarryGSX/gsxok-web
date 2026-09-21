@@ -1,6 +1,6 @@
 import { getAllDispensaries } from '@/lib/sanity/queries'
 import { googleMapsDirectionsUrl } from '@/lib/geo/directions'
-import { MOCK_RETAILERS } from './catalog'
+import { RETAILERS } from './catalog'
 import type { Retailer, RetailerDataSource } from './types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,15 +33,6 @@ function mapDispensaryToRetailer(doc: SanityDispensary): Retailer | null {
   }
 }
 
-// TEMPORARY, per explicit instruction: the rebuild is a development/review
-// deployment, not the live customer-facing GSX site, so it's acceptable to
-// show clearly-labeled test data here. Forced to false so the deployed
-// rebuild renders MOCK_RETAILERS instead of the "unavailable" fallback.
-// MUST be reverted to `process.env.NODE_ENV === 'production'` before this
-// rebuild replaces the real GSX website, and before Larry's real retailer
-// list goes into Sanity.
-const isProduction = false
-
 export async function getRetailers(): Promise<{ retailers: Retailer[]; source: RetailerDataSource }> {
   try {
     const docs = await getAllDispensaries()
@@ -58,12 +49,13 @@ export async function getRetailers(): Promise<{ retailers: Retailer[]; source: R
     // breaking the page.
   }
 
-  // No real retailer data. In production, that must render as a truthful
-  // "we don't have this yet" state (see RetailerLocator's 'unavailable'
-  // branch) — never as placeholder stores standing in for real ones.
-  if (isProduction) {
-    return { retailers: [], source: 'unavailable' }
+  // No Sanity documents yet — fall back to the real retailer list parsed
+  // from the GSX customer spreadsheet (lib/retailers/catalog.ts). Only if
+  // that were ever empty too would this render the truthful "unavailable"
+  // empty state instead of mixing in placeholder stores.
+  if (RETAILERS.length > 0) {
+    return { retailers: RETAILERS, source: 'catalog' }
   }
 
-  return { retailers: MOCK_RETAILERS, source: 'mock' }
+  return { retailers: [], source: 'unavailable' }
 }
