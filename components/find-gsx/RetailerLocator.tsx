@@ -4,6 +4,7 @@ import { useId, useMemo, useState } from 'react'
 import type { Retailer, RetailerDataSource, RetailerWithDistance } from '@/lib/retailers/types'
 import { distanceMiles } from '@/lib/geo/distance'
 import { RetailerResult } from './RetailerResult'
+import { CompactRetailerRow } from './CompactRetailerRow'
 
 // The Find GSX locator: a ZIP-code search plus a city-based browse
 // directory. No map — see the earlier Mapbox implementation this replaced.
@@ -189,27 +190,46 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
           }
 
           /* The city-name index (letters A, B, C… each with their cities)
-             flows into a balanced 2-column layout at desktop via CSS
-             multi-column — letter groups vary in size, and columns
-             naturally balance that without a fixed row/column template.
-             Single column below 1024px (tablet and mobile), per spec. This
-             is an index of CITY NAMES only — never retailer rows, and
-             never more than one city's retailers on screen at a time. */
+             flows into a compact multi-column layout via CSS multi-column
+             — letter groups vary in size, and columns naturally balance
+             that without a fixed row/column template. This is an index of
+             CITY NAMES only — never retailer rows, and never more than one
+             city's retailers on screen at a time. 3-4 columns at desktop
+             per spec (not a stretched single/double column). */
           .fg-city-index-columns {
             column-count: 1;
+            column-gap: 2rem;
+          }
+          @media (min-width: 640px) {
+            .fg-city-index-columns { column-count: 2; }
           }
           @media (min-width: 1024px) {
-            .fg-city-index-columns {
-              column-count: 2;
-              column-gap: 3rem;
-            }
+            .fg-city-index-columns { column-count: 3; }
+          }
+          @media (min-width: 1280px) {
+            .fg-city-index-columns { column-count: 4; }
           }
           .fg-letter-group {
             break-inside: avoid-column;
             display: inline-block;
             width: 100%;
             vertical-align: top;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
+          }
+
+          /* Selected-city retailer results: a plain 2-column CSS grid at
+             desktop (each CompactRetailerRow supplies its own bottom
+             divider — no outer border box, no card). Single column below
+             768px. */
+          .fg-city-retailer-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+          }
+          @media (min-width: 768px) {
+            .fg-city-retailer-grid {
+              grid-template-columns: 1fr 1fr;
+              column-gap: 2.5rem;
+            }
           }
         `}</style>
 
@@ -350,16 +370,15 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
                   {letterGroups.map(([letter, cities]) => (
                     <div key={letter} className="fg-letter-group">
                       <p className="text-label" style={{ color: 'var(--color-green)' }}>{letter}</p>
-                      <ul className="mt-1 border-t border-[var(--color-border)]">
+                      <ul className="mt-1">
                         {cities.map((city) => (
-                          <li key={city} className="border-b border-[var(--color-border)]">
+                          <li key={city}>
                             <button
                               type="button"
                               onClick={() => setSelectedCity(city)}
-                              className="w-full flex items-center justify-between gap-2 py-2.5 text-body-sm text-left text-[var(--color-dark)] hover:text-[var(--color-green)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)]"
+                              className="w-full text-left py-1 text-body-sm text-[var(--color-dark)] hover:text-[var(--color-green)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)]"
                             >
                               {city}
-                              <span aria-hidden="true" style={{ color: 'var(--color-muted)' }}>→</span>
                             </button>
                           </li>
                         ))}
@@ -371,19 +390,22 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
             </div>
           ) : (
             <div className="mt-6">
+              {/* Quiet text action, not a bordered button — it shouldn't
+                  visually compete with the "Retailers in {city}" heading
+                  right below it. */}
               <button
                 type="button"
                 onClick={() => setSelectedCity(null)}
-                className="text-button px-5 h-11 bg-transparent text-[var(--color-dark)] border border-[var(--color-dark)] hover:bg-[var(--color-dark)] hover:text-[var(--color-cream)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)]"
+                className="text-body-sm text-[var(--color-muted)] hover:text-[var(--color-dark)] underline-offset-4 hover:underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)] focus-visible:rounded-sm"
               >
-                ← Back to All Cities
+                ← Back to all cities
               </button>
-              <h3 className="text-h3 text-[var(--color-dark)] mt-6">Retailers in {selectedCity}</h3>
-              <ul className="mt-4 border border-[var(--color-border)]">
+              <h3 className="text-h3 text-[var(--color-dark)] mt-3">Retailers in {selectedCity}</h3>
+              <div className="fg-city-retailer-grid mt-4">
                 {(cityMap.get(selectedCity) ?? []).map((r) => (
-                  <RetailerResult key={r.id} retailer={r} />
+                  <CompactRetailerRow key={r.id} retailer={r} />
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>
