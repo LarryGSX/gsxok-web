@@ -95,27 +95,39 @@ export function CitySelect({ id, cities, value, onSelect }: CitySelectProps) {
       <label htmlFor={id} className="text-label" style={{ color: 'var(--color-muted)' }}>
         Select a city
       </label>
-      <input
-        ref={inputRef}
-        id={id}
-        type="text"
-        role="combobox"
-        aria-expanded={isOpen}
-        aria-controls={listboxId}
-        aria-autocomplete="list"
-        aria-activedescendant={activeOptionId}
-        autoComplete="off"
-        value={query}
-        placeholder="Choose a city"
-        onFocus={() => openList()}
-        onChange={(e) => {
-          setQuery(e.target.value)
-          openList()
-        }}
-        onKeyDown={handleKeyDown}
-        onBlur={() => setIsOpen(false)}
-        className="mt-1.5 h-11 w-full px-4 text-body-sm bg-white text-[var(--color-dark)] border border-[var(--color-border)] placeholder:text-[var(--color-muted)] focus:outline-none focus:border-[var(--color-green)] transition-colors duration-150"
-      />
+      <div className="relative mt-1.5">
+        <input
+          ref={inputRef}
+          id={id}
+          type="text"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          aria-activedescendant={activeOptionId}
+          autoComplete="off"
+          value={query}
+          placeholder="Select a city"
+          onFocus={() => openList()}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            openList()
+          }}
+          onKeyDown={handleKeyDown}
+          onBlur={() => setIsOpen(false)}
+          className="h-11 w-full pl-4 pr-10 text-body-sm bg-white text-[var(--color-dark)] border border-[var(--color-border)] placeholder:text-[var(--color-muted)] cursor-pointer hover:border-[var(--color-green)] focus:outline-none focus:cursor-text focus:border-[var(--color-green)] transition-colors duration-150"
+        />
+        {/* Dropdown chevron — the same mark used by the site's other select
+            control (components/ui/FormField.tsx). Always rendered, focused
+            or not, so the control reads as "click to choose" rather than a
+            plain text field; pointer-events-none so it never intercepts
+            clicks meant for the input underneath. */}
+        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-muted)]">
+          <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+            <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
+          </svg>
+        </span>
+      </div>
       {isOpen && (
         <ul
           id={listboxId}
