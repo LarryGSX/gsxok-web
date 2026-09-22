@@ -5,14 +5,15 @@ import type { Retailer, RetailerDataSource, RetailerWithDistance } from '@/lib/r
 import { distanceMiles } from '@/lib/geo/distance'
 import { RetailerResult } from './RetailerResult'
 
-// The Find GSX locator: a ZIP-code search plus a full retailer directory.
-// No map — see the earlier Mapbox implementation this replaced. The
-// primary flow is deliberately simple: enter a ZIP, see the nearest
-// eligible retailers and their addresses; browse the full list separately,
-// collapsed by default (see "Browse all GSX retailers" below) — the two
-// are intentionally never blended: ZIP results are distance-sorted with an
-// approximate-mileage figure, the full directory is alphabetical/grouped by
-// city with no distance shown at all.
+// The Find GSX locator: a ZIP-code search plus a city-based browse
+// directory. No map — see the earlier Mapbox implementation this replaced.
+// The primary flow is deliberately simple: enter a ZIP, see the nearest
+// eligible retailers and their addresses. Separately, browse by city (see
+// "Browse GSX retailers by city" below) — users pick a city first and only
+// ever see that one city's retailers; the full ~150-retailer dataset is
+// never rendered at once in either mode. The two are intentionally never
+// blended: ZIP results are distance-sorted with an approximate-mileage
+// figure, the city directory is alphabetical with no distance shown at all.
 
 const RESULTS_PAGE_SIZE = 5
 
@@ -39,7 +40,10 @@ function sortByCity(list: Retailer[]): Retailer[] {
 // baseList is already sorted city-then-name, so grouping via a Map (which
 // preserves insertion order) naturally yields cities in alphabetical order,
 // each with its retailers already in alphabetical order — no re-sorting
-// needed here.
+// needed here. This is also the *only* place city names come from — derived
+// straight from the retailer records passed in, never a separately
+// maintained list — so the directory automatically tracks whatever
+// Sanity/the catalog actually contains.
 function groupByCity(list: Retailer[]): [string, Retailer[]][] {
   const groups = new Map<string, Retailer[]>()
   for (const r of list) {
@@ -50,10 +54,24 @@ function groupByCity(list: Retailer[]): [string, Retailer[]][] {
   return Array.from(groups.entries())
 }
 
+// Groups an already-alphabetized city list under its first-letter header —
+// only letters actually present get a section (never an empty "Q" with no
+// cities under it).
+function groupByLetter(cities: string[]): [string, string[]][] {
+  const groups = new Map<string, string[]>()
+  for (const city of cities) {
+    const letter = city[0]?.toUpperCase() ?? '#'
+    const existing = groups.get(letter)
+    if (existing) existing.push(city)
+    else groups.set(letter, [city])
+  }
+  return Array.from(groups.entries())
+}
+
 export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps) {
   const zipInputId = useId()
   const zipErrorId = useId()
-  const directoryId = useId()
+  const citySearchId = useId()
 
   const [zip, setZip] = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -65,12 +83,22 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
   // results block below can key off it and replay its entrance transition
   // even when searching the same ZIP twice in a row.
   const [searchNonce, setSearchNonce] = useState(0)
-  // Independent of all ZIP-search state above — expanding/collapsing the
-  // full directory never touches or resets the current search.
-  const [showDirectory, setShowDirectory] = useState(false)
+  // Independent of all ZIP-search state above — selecting/clearing a city
+  // never touches or resets the current ZIP search, and vice versa.
+  const [selectedCity, setSelectedCity] = useState<string | null>(null)
+  const [citySearch, setCitySearch] = useState('')
 
   const baseList = useMemo(() => sortByCity(retailers), [retailers])
   const cityGroups = useMemo(() => groupByCity(baseList), [baseList])
+  const cityMap = useMemo(() => new Map(cityGroups), [cityGroups])
+  const cityNames = useMemo(() => cityGroups.map(([city]) => city), [cityGroups])
+
+  const filteredCityNames = useMemo(() => {
+    const q = citySearch.trim().toLowerCase()
+    return q ? cityNames.filter((c) => c.toLowerCase().includes(q)) : cityNames
+  }, [cityNames, citySearch])
+
+  const letterGroups = useMemo(() => groupByLetter(filteredCityNames), [filteredCityNames])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -160,27 +188,28 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
             animation: fgResultsIn 300ms cubic-bezier(0.0, 0.0, 0.2, 1.0) both;
           }
 
-          /* The expanded "Browse all GSX retailers" directory flows into a
-             balanced 2-column layout at desktop widths via CSS multi-column
-             (not CSS Grid) — city groups vary in how many retailers they
-             contain, and columns naturally balance uneven group sizes
-             without needing a fixed row/column template. Single column
-             below 1024px (tablet and mobile), per spec. */
-          .fg-directory-columns {
+          /* The city-name index (letters A, B, C… each with their cities)
+             flows into a balanced 2-column layout at desktop via CSS
+             multi-column — letter groups vary in size, and columns
+             naturally balance that without a fixed row/column template.
+             Single column below 1024px (tablet and mobile), per spec. This
+             is an index of CITY NAMES only — never retailer rows, and
+             never more than one city's retailers on screen at a time. */
+          .fg-city-index-columns {
             column-count: 1;
           }
           @media (min-width: 1024px) {
-            .fg-directory-columns {
+            .fg-city-index-columns {
               column-count: 2;
               column-gap: 3rem;
             }
           }
-          .fg-city-group {
+          .fg-letter-group {
             break-inside: avoid-column;
             display: inline-block;
             width: 100%;
             vertical-align: top;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
           }
         `}</style>
 
@@ -281,43 +310,80 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
           </div>
         )}
 
-        {/* Browse all GSX retailers — collapsed by default, independent of
-            any ZIP search above (expanding/collapsing this never touches
-            searchedZip/nearestResults). Grouped by city, alphabetical
-            throughout, no distance shown — a distinct section from the
-            ZIP results above, never blended together. */}
+        {/* Browse GSX retailers by city — a city index, not a retailer
+            dump. Users pick one city; only that city's retailers ever
+            render. Independent of the ZIP search above (selecting a city
+            never touches searchedZip/nearestResults, and vice versa). No
+            distance shown here — a distinct mode from the ZIP results
+            above, never blended together. */}
         <div className="mt-12">
-          <h2 className="text-h4 text-[var(--color-dark)]">Browse all GSX retailers</h2>
+          <h2 className="text-h4 text-[var(--color-dark)]">Browse GSX retailers by city</h2>
           <p className="text-body-sm mt-1" style={{ color: 'var(--color-muted)', maxWidth: '56ch' }}>
             View current GSX retailer locations across Oklahoma
           </p>
-          <button
-            type="button"
-            onClick={() => setShowDirectory((v) => !v)}
-            aria-expanded={showDirectory}
-            aria-controls={directoryId}
-            className="text-button mt-4 px-5 h-11 bg-transparent text-[var(--color-dark)] border border-[var(--color-dark)] hover:bg-[var(--color-dark)] hover:text-[var(--color-cream)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)]"
-          >
-            {showDirectory ? 'Hide Retailers' : 'Show All Retailers'}
-          </button>
 
-          {showDirectory && (
-            <div id={directoryId} className="fg-directory-columns mt-8">
-              {cityGroups.map(([city, list]) => (
-                <div key={city} className="fg-city-group">
-                  <h3
-                    className="text-h4"
-                    style={{ color: 'var(--color-dark)', textTransform: 'uppercase', letterSpacing: '0.04em' }}
-                  >
-                    {city}
-                  </h3>
-                  <ul className="mt-2 border border-[var(--color-border)]">
-                    {list.map((r) => (
-                      <RetailerResult key={r.id} retailer={r} />
-                    ))}
-                  </ul>
+          {selectedCity === null ? (
+            <div className="mt-6">
+              {/* Filters the city index only — never a second retailer
+                  search. The main ZIP search above remains the primary
+                  locator; this just narrows a fairly long city list. */}
+              <div className="flex flex-col gap-1.5" style={{ maxWidth: '320px' }}>
+                <label htmlFor={citySearchId} className="text-label" style={{ color: 'var(--color-muted)' }}>
+                  Search cities
+                </label>
+                <input
+                  id={citySearchId}
+                  type="text"
+                  value={citySearch}
+                  onChange={(e) => setCitySearch(e.target.value)}
+                  placeholder="e.g. Tulsa"
+                  className="h-11 px-4 text-body-sm bg-white text-[var(--color-dark)] border border-[var(--color-border)] placeholder:text-[var(--color-muted)] focus:outline-none focus:border-[var(--color-green)] transition-colors duration-150"
+                />
+              </div>
+
+              {letterGroups.length === 0 ? (
+                <p className="text-body-sm mt-6" style={{ color: 'var(--color-muted)' }}>
+                  No cities match &ldquo;{citySearch}&rdquo;.
+                </p>
+              ) : (
+                <div className="fg-city-index-columns mt-6">
+                  {letterGroups.map(([letter, cities]) => (
+                    <div key={letter} className="fg-letter-group">
+                      <p className="text-label" style={{ color: 'var(--color-green)' }}>{letter}</p>
+                      <ul className="mt-1 border-t border-[var(--color-border)]">
+                        {cities.map((city) => (
+                          <li key={city} className="border-b border-[var(--color-border)]">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCity(city)}
+                              className="w-full flex items-center justify-between gap-2 py-2.5 text-body-sm text-left text-[var(--color-dark)] hover:text-[var(--color-green)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)]"
+                            >
+                              {city}
+                              <span aria-hidden="true" style={{ color: 'var(--color-muted)' }}>→</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+            </div>
+          ) : (
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => setSelectedCity(null)}
+                className="text-button px-5 h-11 bg-transparent text-[var(--color-dark)] border border-[var(--color-dark)] hover:bg-[var(--color-dark)] hover:text-[var(--color-cream)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)]"
+              >
+                ← Back to All Cities
+              </button>
+              <h3 className="text-h3 text-[var(--color-dark)] mt-6">Retailers in {selectedCity}</h3>
+              <ul className="mt-4 border border-[var(--color-border)]">
+                {(cityMap.get(selectedCity) ?? []).map((r) => (
+                  <RetailerResult key={r.id} retailer={r} />
+                ))}
+              </ul>
             </div>
           )}
         </div>
