@@ -5,6 +5,7 @@ import type { Retailer, RetailerDataSource, RetailerWithDistance } from '@/lib/r
 import { distanceMiles } from '@/lib/geo/distance'
 import { RetailerResult } from './RetailerResult'
 import { CompactRetailerRow } from './CompactRetailerRow'
+import { CitySelect } from './CitySelect'
 
 // The Find GSX locator: a ZIP-code search plus a city-based browse
 // directory. No map — see the earlier Mapbox implementation this replaced.
@@ -58,7 +59,7 @@ function groupByCity(list: Retailer[]): [string, Retailer[]][] {
 export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps) {
   const zipInputId = useId()
   const zipErrorId = useId()
-  const citySearchId = useId()
+  const citySelectId = useId()
 
   const [zip, setZip] = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -71,70 +72,15 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
   // even when searching the same ZIP twice in a row.
   const [searchNonce, setSearchNonce] = useState(0)
   // Independent of all ZIP-search state above — browsing the directory
-  // never touches or resets the current ZIP search, and vice versa.
-  //
-  // Three-level drill-down, one level visible at a time:
-  //   1. alphabet (always visible while selectedCity is null)
-  //   2. selectedLetter -> the cities under that letter
-  //   3. selectedCity -> that city's retailers (letter/alphabet hidden)
-  // citySearch is a parallel entry point into level 2: typing a query shows
-  // matching cities directly (no letter needed), and picking one of those
-  // still records which letter it falls under so "Back to cities" has
-  // somewhere coherent to return to.
-  const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
+  // never touches or resets the current ZIP search, and vice versa. A
+  // single searchable "Select a city" combobox (see CitySelect.tsx) is the
+  // only way into the directory now — no letter/alphabet step in between.
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
-  const [citySearch, setCitySearch] = useState('')
 
   const baseList = useMemo(() => sortByCity(retailers), [retailers])
   const cityGroups = useMemo(() => groupByCity(baseList), [baseList])
   const cityMap = useMemo(() => new Map(cityGroups), [cityGroups])
   const cityNames = useMemo(() => cityGroups.map(([city]) => city), [cityGroups])
-
-  // Only letters that actually head a city in the dataset ever render —
-  // never a disabled/greyed-out letter with nothing under it.
-  const availableLetters = useMemo(() => {
-    const letters = new Set<string>()
-    for (const city of cityNames) {
-      const letter = city[0]?.toUpperCase()
-      if (letter) letters.add(letter)
-    }
-    return Array.from(letters).sort()
-  }, [cityNames])
-
-  const isSearchingCities = citySearch.trim().length > 0
-
-  const searchMatches = useMemo(() => {
-    if (!isSearchingCities) return []
-    const q = citySearch.trim().toLowerCase()
-    return cityNames.filter((c) => c.toLowerCase().includes(q))
-  }, [cityNames, citySearch, isSearchingCities])
-
-  const citiesForSelectedLetter = useMemo(() => {
-    if (!selectedLetter) return []
-    return cityNames.filter((c) => c[0]?.toUpperCase() === selectedLetter)
-  }, [cityNames, selectedLetter])
-
-  function handleSelectLetter(letter: string) {
-    setCitySearch('')
-    setSelectedLetter(letter)
-  }
-
-  function handleCitySearchChange(value: string) {
-    setCitySearch(value)
-    // A typed query is its own way into the city list — it shouldn't be
-    // read as also having a letter selected. Clearing the field this way
-    // lands back on the plain alphabet-only state, per spec.
-    if (value.trim()) setSelectedLetter(null)
-  }
-
-  function handleSelectCity(city: string) {
-    setCitySearch('')
-    // If the city was reached via search (no letter chosen yet), record its
-    // letter so "Back to cities" below has that letter's list to return to,
-    // instead of dropping the visitor all the way back to a bare alphabet.
-    setSelectedLetter(city[0]?.toUpperCase() ?? null)
-    setSelectedCity(city)
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -222,52 +168,6 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
           }
           .fg-results-in {
             animation: fgResultsIn 300ms cubic-bezier(0.0, 0.0, 0.2, 1.0) both;
-          }
-
-          /* The compact A-B-C… letter selector. Wraps on narrow screens
-             instead of scrolling or growing tall. */
-          .fg-letter-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.375rem;
-          }
-          .fg-letter-button {
-            min-width: 2.25rem;
-            height: 2.25rem;
-            padding: 0 0.5rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--color-border);
-            color: var(--color-dark);
-            transition: background-color 150ms, color 150ms, border-color 150ms;
-          }
-          .fg-letter-button:hover {
-            border-color: var(--color-green);
-            color: var(--color-green);
-          }
-          .fg-letter-button[data-active="true"] {
-            background-color: var(--color-green);
-            border-color: var(--color-green);
-            color: var(--color-cream);
-          }
-
-          /* Cities under one letter (or matching a search) — a handful of
-             names at most, never the full ~150-city list at once. 2-4
-             columns depending on width, 1 column on the narrowest screens. */
-          .fg-city-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            column-gap: 1.5rem;
-          }
-          @media (min-width: 480px) {
-            .fg-city-grid { grid-template-columns: 1fr 1fr; }
-          }
-          @media (min-width: 1024px) {
-            .fg-city-grid { grid-template-columns: 1fr 1fr 1fr; }
-          }
-          @media (min-width: 1280px) {
-            .fg-city-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
           }
 
           /* Selected-city retailer results: a plain 2-column CSS grid at
@@ -383,122 +283,27 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
           </div>
         )}
 
-        {/* Browse GSX retailers by city — a three-level drill-down
-            (alphabet -> cities under a letter -> retailers in a city).
-            Exactly one level's contents render at a time; the full city
-            list and the full retailer list are never both/either rendered
-            in one pass. Independent of the ZIP search above (selecting a
-            letter or city never touches searchedZip/nearestResults, and
-            vice versa). No distance shown here — a distinct mode from the
-            ZIP results above, never blended together. */}
+        {/* Browse GSX retailers by city — one searchable "Select a city"
+            combobox, then that city's retailers directly below. No
+            intermediate letter/alphabet step. Independent of the ZIP
+            search above (choosing a city never touches
+            searchedZip/nearestResults, and vice versa). No distance shown
+            here — a distinct mode from the ZIP results above, never
+            blended together. The combobox stays visible once a city is
+            chosen, so switching cities is immediate with no "back" step. */}
         <div className="mt-12">
           <h2 className="text-h4 text-[var(--color-dark)]">Browse GSX retailers by city</h2>
           <p className="text-body-sm mt-1" style={{ color: 'var(--color-muted)', maxWidth: '56ch' }}>
             View current GSX retailer locations across Oklahoma
           </p>
 
-          {selectedCity === null ? (
-            <div className="mt-6">
-              {/* Filters the city index only — never a second retailer
-                  search. The main ZIP search above remains the primary
-                  locator; this just narrows the directory to matching
-                  city names. */}
-              <div className="flex flex-col gap-1.5" style={{ maxWidth: '320px' }}>
-                <label htmlFor={citySearchId} className="text-label" style={{ color: 'var(--color-muted)' }}>
-                  Search cities
-                </label>
-                <input
-                  id={citySearchId}
-                  type="text"
-                  value={citySearch}
-                  onChange={(e) => handleCitySearchChange(e.target.value)}
-                  placeholder="e.g. Tulsa"
-                  className="h-11 px-4 text-body-sm bg-white text-[var(--color-dark)] border border-[var(--color-border)] placeholder:text-[var(--color-muted)] focus:outline-none focus:border-[var(--color-green)] transition-colors duration-150"
-                />
-              </div>
+          <div className="mt-6">
+            <CitySelect id={citySelectId} cities={cityNames} value={selectedCity} onSelect={setSelectedCity} />
+          </div>
 
-              {/* Level 1: the alphabet. Only letters that actually head a
-                  city ever appear, and this stays visible whenever no city
-                  is selected so a visitor can jump straight to another
-                  letter without backing out first. */}
-              <div className="fg-letter-row mt-6" role="group" aria-label="Browse cities by letter">
-                {availableLetters.map((letter) => (
-                  <button
-                    key={letter}
-                    type="button"
-                    onClick={() => handleSelectLetter(letter)}
-                    aria-pressed={selectedLetter === letter}
-                    data-active={selectedLetter === letter ? 'true' : undefined}
-                    className="fg-letter-button text-button focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)]"
-                  >
-                    {letter}
-                  </button>
-                ))}
-              </div>
-
-              {/* Level 2: cities under the search query or the selected
-                  letter — never both sources and never the full city list. */}
-              {isSearchingCities ? (
-                searchMatches.length === 0 ? (
-                  <p className="text-body-sm mt-6" style={{ color: 'var(--color-muted)' }}>
-                    No cities match &ldquo;{citySearch}&rdquo;.
-                  </p>
-                ) : (
-                  <div className="mt-6">
-                    <p className="text-label" style={{ color: 'var(--color-muted)' }}>
-                      Cities matching &ldquo;{citySearch}&rdquo;
-                    </p>
-                    <div className="fg-city-grid mt-3">
-                      {searchMatches.map((city) => (
-                        <button
-                          key={city}
-                          type="button"
-                          onClick={() => handleSelectCity(city)}
-                          className="text-left py-1 text-body-sm text-[var(--color-dark)] hover:text-[var(--color-green)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)]"
-                        >
-                          {city}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )
-              ) : selectedLetter ? (
-                <div className="mt-6">
-                  <p className="text-label" style={{ color: 'var(--color-muted)' }}>
-                    Cities beginning with {selectedLetter}
-                  </p>
-                  <div className="fg-city-grid mt-3">
-                    {citiesForSelectedLetter.map((city) => (
-                      <button
-                        key={city}
-                        type="button"
-                        onClick={() => handleSelectCity(city)}
-                        className="text-left py-1 text-body-sm text-[var(--color-dark)] hover:text-[var(--color-green)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)]"
-                      >
-                        {city}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <div className="mt-6">
-              {/* Level 3: just the back action, the heading, and this one
-                  city's retailers — the alphabet and city grid are hidden
-                  entirely while a city is selected. Quiet text action, not
-                  a bordered button, so it doesn't compete with the heading
-                  right below it. Returns to the selected letter's city
-                  list (selectedLetter is left untouched), not all the way
-                  back to a bare alphabet. */}
-              <button
-                type="button"
-                onClick={() => setSelectedCity(null)}
-                className="text-body-sm text-[var(--color-muted)] hover:text-[var(--color-dark)] underline-offset-4 hover:underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)] focus-visible:rounded-sm"
-              >
-                ← Back to cities
-              </button>
-              <h3 className="text-h3 text-[var(--color-dark)] mt-3">Retailers in {selectedCity}</h3>
+          {selectedCity && (
+            <div className="mt-8">
+              <h3 className="text-h3 text-[var(--color-dark)]">Retailers in {selectedCity}</h3>
               <div className="fg-city-retailer-grid mt-4">
                 {(cityMap.get(selectedCity) ?? []).map((r) => (
                   <CompactRetailerRow key={r.id} retailer={r} />
