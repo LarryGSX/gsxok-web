@@ -46,7 +46,16 @@ export function CitySelect({ id, cities, value, onSelect }: CitySelectProps) {
     activeOptionRef.current?.scrollIntoView({ block: 'nearest' })
   }, [activeIndex])
 
-  function openList() {
+  // Reopening the closed control is a fresh browse, not a continuation of
+  // whatever text happens to be sitting in the field — the committed
+  // selection (`value`) stays exactly as it is, but the field's temporary
+  // search query resets to empty so the full city list shows immediately,
+  // with no manual deletion of the previous selection required. Guarded on
+  // `isOpen` so a second click/keystroke while already open (e.g. to type
+  // a fresh search) doesn't stomp on what the user is mid-typing.
+  function reopenFresh() {
+    if (isOpen) return
+    setQuery('')
     setIsOpen(true)
     setActiveIndex(-1)
   }
@@ -62,14 +71,14 @@ export function CitySelect({ id, cities, value, onSelect }: CitySelectProps) {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       if (!isOpen) {
-        openList()
+        reopenFresh()
         return
       }
       setActiveIndex((i) => Math.min(i + 1, filtered.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       if (!isOpen) {
-        openList()
+        reopenFresh()
         return
       }
       setActiveIndex((i) => Math.max(i - 1, 0))
@@ -108,10 +117,17 @@ export function CitySelect({ id, cities, value, onSelect }: CitySelectProps) {
           autoComplete="off"
           value={query}
           placeholder="Select a city"
-          onFocus={() => openList()}
+          onFocus={reopenFresh}
+          onClick={reopenFresh}
           onChange={(e) => {
+            // Typing is always a live edit to the temporary search query,
+            // never a reset of it — only (re)opening the closed control
+            // clears it (see reopenFresh above).
             setQuery(e.target.value)
-            openList()
+            if (!isOpen) {
+              setIsOpen(true)
+              setActiveIndex(-1)
+            }
           }}
           onKeyDown={handleKeyDown}
           onBlur={() => setIsOpen(false)}
