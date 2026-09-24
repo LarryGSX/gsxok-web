@@ -1,0 +1,87 @@
+# HostGator/Apache routing for the static-exported GSX site.
+#
+# Two jobs, matching what next.config.ts's redirects() + Next's App Router
+# handled automatically on Vercel:
+#   1. Legacy .html/.php URLs from the old PHP site → new clean URLs
+#      (one-to-one copy of next.config.ts's redirects() array on the
+#      control branch — see that file's comments for the same list).
+#   2. Clean, extensionless URLs (e.g. /about) transparently served from
+#      the exported .html files (e.g. about.html) — this is what makes
+#      direct navigation and refreshing any page work, since the actual
+#      files on disk have a .html extension but the public URL structure
+#      must not change.
+
+RewriteEngine On
+
+# ── 1. Legacy URL redirects (permanent, visible to the visitor's browser) ──
+
+RewriteRule ^index\.html$ / [R=301,NC,L]
+RewriteRule ^about\.html$ /about [R=301,NC,L]
+RewriteRule ^products\.html$ /products [R=301,NC,L]
+RewriteRule ^contact\.html$ /contact [R=301,NC,L]
+RewriteRule ^where-to-buy\.html$ /find-gsx [R=301,NC,L]
+
+# Legacy portal paths → new portal equivalents. /login, /register, and the
+# /portal/* sub-pages below don't exist as real pages yet (the portal
+# backend isn't rebuilt on this branch) — this matches the control
+# branch's redirects() exactly, including redirecting to pages that don't
+# exist yet; that's not a regression introduced here.
+RewriteRule ^login\.php$ /login [R=301,NC,L]
+RewriteRule ^register\.php$ /register [R=301,NC,L]
+RewriteRule ^dashboard\.php$ /portal [R=301,NC,L]
+RewriteRule ^order\.php$ /portal/order [R=301,NC,L]
+RewriteRule ^order-history\.php$ /portal/orders [R=301,NC,L]
+RewriteRule ^profile\.php$ /portal/account [R=301,NC,L]
+RewriteRule ^forgot-password\.php$ /forgot-password [R=301,NC,L]
+
+# Catch-all: any other .html file not matched above → homepage. Kept last
+# so the specific rules above always take precedence.
+RewriteRule ^.+\.html$ / [R=301,NC,L]
+
+# ── 2. Clean URLs — serve the matching .html file without changing the
+#    address bar, and without requiring the visitor's link/bookmark/refresh
+#    to include ".html" anywhere. ──────────────────────────────────────────
+
+# Real files and directories (images, contact.php, data/ok-zips.json, etc.)
+# are served as-is — only requests with no existing physical match fall
+# through to the .html lookup below.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# /about -> about.html, / -> index.html, etc. Only matches paths with no
+# dot in them at all, so it never touches contact.php, data/ok-zips.json,
+# or an already-redirected *.html request from section 1 above.
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^([^.]+)$ $1.html [L]
+
+# ── 404 ──────────────────────────────────────────────────────────────────
+ErrorDocument 404 /404.html
+
+# ── Config file protection ──────────────────────────────────────────────
+# contact-config.php and contact-secrets.php contain settings and (once
+# added) mail credentials for contact.php. Being .php files, a direct
+# request to either is executed rather than served as text under normal
+# Apache/PHP config — neither file produces any output on its own, so
+# nothing "leaks" today — but this closes off direct access entirely
+# regardless of server config, error-display settings, or a future editor
+# backup file (contact-config.php~, .bak, etc.) landing next to them,
+# which a misconfigured server COULD serve as plain text.
+<FilesMatch "^contact-(config|secrets)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+<FilesMatch "\.(bak|backup|old|orig|swp|~)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
