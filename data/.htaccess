@@ -1,0 +1,15 @@
+# Blocks all direct web access to this directory. It only ever holds
+# contact.php's rate-limit/duplicate-submission counters — nothing
+# sensitive — but there's no reason for it to be reachable by URL either.
+# Both directives are included for compatibility across Apache 2.2 and 2.4
+# (whichever HostGator is running); an unrecognized directive on either
+# version is simply ignored, not an error.
+<IfModule mod_authz_core.c>
+    # Apache 2.4+
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    # Apache 2.2
+    Order allow,deny
+    Deny from all
+</IfModule>
