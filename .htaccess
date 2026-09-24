@@ -76,6 +76,19 @@ ErrorDocument 404 /404.html
         Deny from all
     </IfModule>
 </FilesMatch>
+
+# Same protection for the portal login/account backend's config and
+# credentials files (portal-config.php / portal-secrets.php) — see
+# portal-config.php's own comments for what each one holds.
+<FilesMatch "^portal-(config|secrets)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
 <FilesMatch "\.(bak|backup|old|orig|swp|~)$">
     <IfModule mod_authz_core.c>
         Require all denied
