@@ -50,7 +50,12 @@ export function ContactForm() {
     }
 
     try {
-      const res = await fetch('/api/contact', {
+      // HostGator static build: posts to the PHP endpoint (contact.php,
+      // deployed at the site root) instead of the Vercel version's
+      // /api/contact route handler, which doesn't exist in this build (no
+      // Node server to run it). Same JSON payload shape either way, so
+      // nothing else in this form changes.
+      const res = await fetch('/contact.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
