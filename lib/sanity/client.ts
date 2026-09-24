@@ -1,4 +1,17 @@
-import { createClient } from 'next-sanity'
+// HostGator static build: imports createClient from @sanity/client
+// directly instead of next-sanity. next-sanity's package root
+// unconditionally re-exports @sanity/next-loader and a visual-editing
+// client component — both register Next.js Server Actions as a pure
+// side effect of the import, even though nothing in this project calls
+// them. Next.js's static export refuses to build at all if any Server
+// Action is registered anywhere in the app (see
+// https://nextjs.org/docs/app/building-your-application/deploying/static-exports#unsupported-features).
+// next-sanity's createClient is @sanity/client's createClient re-exported
+// unchanged (verified in next-sanity's own source) — importing it from
+// @sanity/client instead is identical behavior, just without pulling in
+// next-sanity's Next.js-App-Router integration layer this project never
+// uses (no live preview, no visual editing, no draft mode).
+import { createClient } from '@sanity/client'
 import imageUrlBuilder from '@sanity/image-url'
 import type { SanityImageSource } from '@sanity/image-url/lib/types/types'
 
