@@ -3,6 +3,7 @@
 import { useId, useMemo, useState } from 'react'
 import type { Retailer, RetailerDataSource, RetailerWithDistance } from '@/lib/retailers/types'
 import { distanceMiles } from '@/lib/geo/distance'
+import { lookupZipClient } from '@/lib/geo/zipLookupClient'
 import { RetailerResult } from './RetailerResult'
 import { CompactRetailerRow } from './CompactRetailerRow'
 import { CitySelect } from './CitySelect'
@@ -96,13 +97,17 @@ export function RetailerLocator({ retailers, dataSource }: RetailerLocatorProps)
     setStatus('loading')
 
     try {
-      const res = await fetch(`/api/zip-lookup?zip=${trimmed}`)
-      if (!res.ok) {
-        setStatus(res.status === 404 ? 'not-found' : 'error')
+      // HostGator static build: resolved entirely client-side against a
+      // compact Oklahoma-area dataset (see lib/geo/zipLookupClient.ts) —
+      // no server route. The Vercel version's /api/zip-lookup is replaced
+      // outright rather than kept as a fallback, since there's no server
+      // to serve it in this build.
+      const location = await lookupZipClient(trimmed)
+      if (!location) {
+        setStatus('not-found')
         setSearchedZip(null)
         return
       }
-      const { location } = await res.json()
 
       const withDistance = baseList
         .map((r) => ({ ...r, distanceMiles: distanceMiles(location, r) }))
