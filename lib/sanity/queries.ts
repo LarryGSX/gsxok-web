@@ -1,4 +1,6 @@
-import { groq } from 'next-sanity'
+// See lib/sanity/client.ts for why this imports from the underlying
+// packages directly rather than from next-sanity on this branch.
+import groq from 'groq'
 import { sanityClient, REVALIDATION_TAG } from './client'
 
 // ── Shared field fragments ────────────────────────────────────────────────────
