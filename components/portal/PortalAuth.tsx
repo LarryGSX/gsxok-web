@@ -1,18 +1,19 @@
 'use client'
 
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { checkSession, portalPost } from '@/lib/portal/api'
 
 // The unified /portal account page: one page, two sections (log in, and a
 // "New to GSX?" area that expands an inline registration form) — never a
 // tabbed or two-screen interface. See app/portal/page.tsx for the
 // surrounding hero/layout; this component owns all the interactive state.
 //
-// This is UI/flow only. There is no real backend wired up yet (see
-// app/portal/page.tsx's header comment for why) — both forms run real
-// client-side validation and a genuine loading state, then land on an
-// honest "not connected yet" notice. Never a fabricated success, never a
-// silent no-op.
+// Wired to the real HostGator PHP backend (portal-*.php, deployed at the
+// site root — see lib/portal/api.ts). There is still no dashboard/order
+// workflow anywhere here — a logged-in visitor just sees a short
+// confirmation and a Log Out button, since nothing in the legacy data
+// tells us what a real post-login page looked like.
 
 const inputClass =
   'w-full h-12 px-4 pr-12 text-body bg-white text-[var(--color-dark)] border border-[var(--color-border)] placeholder:text-[var(--color-muted)] focus:outline-none focus:border-[var(--color-green)] transition-colors duration-150'
@@ -26,12 +27,9 @@ const outlineButtonClass =
 const quietLinkClass =
   'text-body-sm text-[var(--color-muted)] hover:text-[var(--color-dark)] underline-offset-4 hover:underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-green)] focus-visible:rounded-sm'
 
-type FormStatus = 'idle' | 'loading' | 'info' | 'error'
+type FormStatus = 'idle' | 'loading' | 'success' | 'error'
 
-// A short, deliberate delay before showing the "not connected yet" notice —
-// purely so the loading state the task asks for is visible, not a stand-in
-// for a real request.
-const FAKE_SUBMIT_DELAY_MS = 500
+const GENERIC_ERROR_MESSAGE = "Something went wrong. Please try again."
 
 function EyeIcon() {
   return (
@@ -101,23 +99,38 @@ function PasswordField({ id, name, label, autoComplete, visible, onToggleVisible
   )
 }
 
-function StatusNote({ status, action }: { status: FormStatus; action: string }) {
-  if (status !== 'info') return null
+function StatusNote({ status, message }: { status: FormStatus; message: string | null }) {
+  if ((status !== 'success' && status !== 'error') || !message) return null
   return (
     <p
-      role="status"
+      role={status === 'error' ? 'alert' : 'status'}
       aria-live="polite"
       className="text-body-sm mt-4 px-4 py-3 border border-[var(--color-border)]"
       style={{ color: 'var(--color-muted)' }}
     >
-      {action} isn&rsquo;t connected yet — this page is still in development. Check back soon.
+      {message}
     </p>
   )
+}
+
+const REGISTER_FIELD_LABELS: Record<string, string> = {
+  firstName: 'First Name',
+  lastName: 'Last Name',
+  address: 'Address',
+  city: 'City',
+  state: 'State',
+  zip: 'ZIP Code',
+  ommaLicense: 'OMMA License Number',
+  email: 'Email',
+  phone: 'Phone',
+  password: 'Password',
+  confirmPassword: 'Confirm Password',
 }
 
 export function PortalAuth() {
   const loginEmailId = useId()
   const loginPasswordId = useId()
+  const forgotEmailId = useId()
 
   const firstNameId = useId()
   const lastNameId = useId()
@@ -133,44 +146,217 @@ export function PortalAuth() {
 
   const loginSectionRef = useRef<HTMLDivElement>(null)
 
+  // 'checking' briefly while session-check.php is asked whether this
+  // visitor already has an active session; then either 'loggedIn' (shows
+  // the confirmation/Log Out panel below) or 'loggedOut' (shows the
+  // normal login/register forms).
+  const [sessionState, setSessionState] = useState<'checking' | 'loggedIn' | 'loggedOut'>('checking')
+  const [sessionUser, setSessionUser] = useState<{ firstName?: string; email?: string }>({})
+  const [logoutStatus, setLogoutStatus] = useState<FormStatus>('idle')
+
   const [loginStatus, setLoginStatus] = useState<FormStatus>('idle')
+  const [loginMessage, setLoginMessage] = useState<string | null>(null)
   const [loginShowPassword, setLoginShowPassword] = useState(false)
+
   const [forgotOpen, setForgotOpen] = useState(false)
+  const [forgotStatus, setForgotStatus] = useState<FormStatus>('idle')
+  const [forgotMessage, setForgotMessage] = useState<string | null>(null)
 
   const [registerOpen, setRegisterOpen] = useState(false)
   const [registerStatus, setRegisterStatus] = useState<FormStatus>('idle')
-  const [registerError, setRegisterError] = useState<string | null>(null)
+  const [registerMessage, setRegisterMessage] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  function handleLoginSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setLoginStatus('loading')
-    setTimeout(() => setLoginStatus('info'), FAKE_SUBMIT_DELAY_MS)
+  useEffect(() => {
+    let cancelled = false
+    checkSession().then((result) => {
+      if (cancelled) return
+      if (result.loggedIn) {
+        setSessionUser({ firstName: result.firstName, email: result.email })
+        setSessionState('loggedIn')
+      } else {
+        setSessionState('loggedOut')
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  async function handleLogout() {
+    setLogoutStatus('loading')
+    try {
+      await portalPost('/logout.php', {})
+    } catch {
+      // Even if the request fails, treat the visitor as logged out
+      // locally — the session cookie may still be valid server-side, but
+      // there's nothing more useful to do here than let them try again.
+    }
+    setSessionState('loggedOut')
+    setSessionUser({})
+    setLogoutStatus('idle')
   }
 
-  function handleRegisterSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleLoginSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setLoginStatus('loading')
+    setLoginMessage(null)
+
     const formData = new FormData(e.currentTarget)
+    const email = String(formData.get('email') ?? '')
+    const password = String(formData.get('password') ?? '')
+
+    try {
+      const { status, data } = await portalPost<{ ok?: boolean; message?: string }>('/login.php', {
+        email,
+        password,
+      })
+
+      if (status === 200 && data?.ok) {
+        const result = await checkSession()
+        setSessionUser({ firstName: result.firstName, email: result.email })
+        setSessionState('loggedIn')
+        setLoginStatus('idle')
+        return
+      }
+
+      setLoginStatus('error')
+      setLoginMessage(data?.message ?? GENERIC_ERROR_MESSAGE)
+    } catch {
+      setLoginStatus('error')
+      setLoginMessage(GENERIC_ERROR_MESSAGE)
+    }
+  }
+
+  async function handleForgotSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setForgotStatus('loading')
+    setForgotMessage(null)
+
+    const formData = new FormData(e.currentTarget)
+    const email = String(formData.get('email') ?? '')
+
+    try {
+      const { status, data } = await portalPost<{ ok?: boolean; message?: string }>('/forgot-password.php', {
+        email,
+      })
+
+      if (status === 200 && data?.ok) {
+        setForgotStatus('success')
+        setForgotMessage(data.message ?? 'If an account exists for that email, a password reset link has been sent.')
+      } else {
+        setForgotStatus('error')
+        setForgotMessage('Please enter a valid email address.')
+      }
+    } catch {
+      setForgotStatus('error')
+      setForgotMessage(GENERIC_ERROR_MESSAGE)
+    }
+  }
+
+  async function handleRegisterSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    const formData = new FormData(form)
     const password = String(formData.get('password') ?? '')
     const confirmPassword = String(formData.get('confirmPassword') ?? '')
 
     if (password !== confirmPassword) {
-      setRegisterError('Passwords do not match.')
       setRegisterStatus('error')
+      setRegisterMessage('Passwords do not match.')
       return
     }
 
-    setRegisterError(null)
     setRegisterStatus('loading')
-    setTimeout(() => setRegisterStatus('info'), FAKE_SUBMIT_DELAY_MS)
+    setRegisterMessage(null)
+
+    const payload = {
+      firstName: String(formData.get('firstName') ?? ''),
+      lastName: String(formData.get('lastName') ?? ''),
+      address: String(formData.get('address') ?? ''),
+      city: String(formData.get('city') ?? ''),
+      state: String(formData.get('state') ?? ''),
+      zip: String(formData.get('zip') ?? ''),
+      ommaLicense: String(formData.get('ommaLicense') ?? ''),
+      email: String(formData.get('email') ?? ''),
+      phone: String(formData.get('phone') ?? ''),
+      password,
+      confirmPassword,
+    }
+
+    try {
+      const { status, data } = await portalPost<{ ok?: boolean; error?: string; fields?: string[]; status?: string }>(
+        '/register.php',
+        payload
+      )
+
+      if (status === 200 && data?.ok) {
+        setRegisterStatus('success')
+        setRegisterMessage(
+          data.status === 'pending'
+            ? 'Your account has been created and is awaiting approval. We’ll be in touch once it’s active.'
+            : 'Your account has been created. You can log in above.'
+        )
+        form.reset()
+        return
+      }
+
+      if (data?.error === 'email_taken') {
+        setRegisterStatus('error')
+        setRegisterMessage('An account already exists for that email.')
+      } else if (data?.error === 'invalid_fields' && data.fields?.length) {
+        const labels = data.fields.map((f) => REGISTER_FIELD_LABELS[f] ?? f)
+        setRegisterStatus('error')
+        setRegisterMessage(`Please check: ${labels.join(', ')}.`)
+      } else {
+        setRegisterStatus('error')
+        setRegisterMessage(GENERIC_ERROR_MESSAGE)
+      }
+    } catch {
+      setRegisterStatus('error')
+      setRegisterMessage(GENERIC_ERROR_MESSAGE)
+    }
   }
 
   function handleCollapseRegister() {
     setRegisterOpen(false)
     setRegisterStatus('idle')
-    setRegisterError(null)
+    setRegisterMessage(null)
     loginSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  if (sessionState === 'checking') {
+    return (
+      <div style={{ maxWidth: '640px' }}>
+        <p className="text-body-sm" style={{ color: 'var(--color-muted)' }}>
+          Checking your session&hellip;
+        </p>
+      </div>
+    )
+  }
+
+  if (sessionState === 'loggedIn') {
+    return (
+      <div style={{ maxWidth: '640px' }}>
+        <p className="text-body" style={{ color: 'var(--color-dark)' }}>
+          {sessionUser.firstName ? `Welcome back, ${sessionUser.firstName}.` : 'You are logged in.'}
+        </p>
+        {sessionUser.email && (
+          <p className="text-body-sm mt-1" style={{ color: 'var(--color-muted)' }}>
+            {sessionUser.email}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={logoutStatus === 'loading'}
+          className={`${outlineButtonClass} mt-6`}
+        >
+          {logoutStatus === 'loading' ? 'Logging Out' : 'Log Out'}
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -206,19 +392,48 @@ export function PortalAuth() {
             <Button type="submit" variant="primary" size="lg" disabled={loginStatus === 'loading'}>
               {loginStatus === 'loading' ? 'Logging In' : 'Log In'}
             </Button>
-            <button type="button" onClick={() => setForgotOpen((v) => !v)} className={quietLinkClass}>
+            <button
+              type="button"
+              onClick={() => {
+                setForgotOpen((v) => !v)
+                setForgotStatus('idle')
+                setForgotMessage(null)
+              }}
+              className={quietLinkClass}
+            >
               Forgot password?
             </button>
           </div>
         </form>
 
         {forgotOpen && (
-          <p className="text-body-sm mt-4" style={{ color: 'var(--color-muted)' }}>
-            Password reset isn&rsquo;t available yet. Contact GSX for help getting back into your account.
-          </p>
+          <form onSubmit={handleForgotSubmit} className="flex flex-col gap-3 mt-4" style={{ maxWidth: '420px' }}>
+            <label htmlFor={forgotEmailId} className="text-label" style={{ color: 'var(--color-muted)' }}>
+              Email
+            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                id={forgotEmailId}
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                className={`${plainInputClass} flex-1`}
+                style={{ minWidth: '220px' }}
+              />
+              <button
+                type="submit"
+                disabled={forgotStatus === 'loading'}
+                className={outlineButtonClass}
+              >
+                {forgotStatus === 'loading' ? 'Sending' : 'Send Reset Link'}
+              </button>
+            </div>
+          </form>
         )}
 
-        <StatusNote status={loginStatus} action="Account sign-in" />
+        <StatusNote status={forgotStatus} message={forgotMessage} />
+        <StatusNote status={loginStatus} message={loginMessage} />
       </div>
 
       {/* ── New to GSX? — the natural second option on the same page, not
@@ -346,12 +561,6 @@ export function PortalAuth() {
               />
             </div>
 
-            {registerStatus === 'error' && registerError && (
-              <p role="alert" className="text-body-sm mt-4" style={{ color: 'var(--color-muted)' }}>
-                {registerError}
-              </p>
-            )}
-
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-6">
               <Button type="submit" variant="primary" size="lg" disabled={registerStatus === 'loading'}>
                 {registerStatus === 'loading' ? 'Creating Account' : 'Create Account'}
@@ -362,7 +571,7 @@ export function PortalAuth() {
             </div>
           </form>
 
-          <StatusNote status={registerStatus} action="Account creation" />
+          <StatusNote status={registerStatus} message={registerMessage} />
         </div>
       )}
     </div>
