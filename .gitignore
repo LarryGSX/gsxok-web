@@ -33,3 +33,9 @@ prisma/migrations/dev.db
 # OS
 .DS_Store
 Thumbs.db
+
+# PHP backend secrets — real credentials are created directly on the
+# server (or a local test machine), never committed. See portal-config.php
+# and contact-config.php's own comments.
+contact-secrets.php
+portal-secrets.php
