@@ -13,12 +13,21 @@
  * database's credentials (e.g. one created in XAMPP), never the live one.
  */
 
+// [Fix 2026-10-04] Load the real credentials FIRST. PHP constants can't be
+// redefined, so the old order (placeholders defined, then secrets loaded)
+// meant the empty placeholder login always won and the database never
+// connected.
+$gsxPortalSecretsFile = __DIR__ . '/portal-secrets.php';
+if (is_file($gsxPortalSecretsFile)) {
+    require_once $gsxPortalSecretsFile;
+}
+
 // ── Database (defaults are placeholders — real values come from
 //    portal-secrets.php, which does not exist yet on a fresh checkout) ──
-define('GSX_DB_HOST', 'localhost');
-define('GSX_DB_NAME', 'gsx_portal');
-define('GSX_DB_USER', '');
-define('GSX_DB_PASS', '');
+defined('GSX_DB_HOST') || define('GSX_DB_HOST', 'localhost');
+defined('GSX_DB_NAME') || define('GSX_DB_NAME', 'gsx_portal');
+defined('GSX_DB_USER') || define('GSX_DB_USER', '');
+defined('GSX_DB_PASS') || define('GSX_DB_PASS', '');
 
 // ── Session / cookie security ────────────────────────────────────────────
 // 'Lax' allows normal same-site navigation (e.g. following a password
@@ -71,7 +80,4 @@ define('GSX_EMAIL_MAX', 255);
 define('GSX_PHONE_MAX', 30);
 define('GSX_PASSWORD_MIN', 8);
 
-$gsxPortalSecretsFile = __DIR__ . '/portal-secrets.php';
-if (is_file($gsxPortalSecretsFile)) {
-    require_once $gsxPortalSecretsFile;
-}
+// [Fix 2026-10-04] portal-secrets.php is now loaded near the top of this file, before the defaults.
