@@ -8,9 +8,16 @@
  * instead of mail(), see the report on this decision) belong in
  * contact-secrets.php instead — a file that is .gitignore'd, denied by
  * .htaccess, and only ever created directly on the server via FTP/File
- * Manager, never committed. See the optional-include block at the bottom
- * of this file.
+ * Manager, never committed. See the optional-include block just below.
  */
+
+// Load the optional secrets file FIRST. PHP constants can't be redefined,
+// so anything contact-secrets.php defines (e.g. GSX_SMTP_ENABLED) has to
+// exist before the defaults below, which only fill in what's still unset.
+$gsxSecretsFile = __DIR__ . '/contact-secrets.php';
+if (is_file($gsxSecretsFile)) {
+    require_once $gsxSecretsFile;
+}
 
 // Where submitted messages are delivered.
 define('GSX_CONTACT_TO', 'contact@gsxok.com');
@@ -22,13 +29,12 @@ define('GSX_CONTACT_TO', 'contact@gsxok.com');
 // This is a public-facing address, not a secret — safe to commit.
 define('GSX_CONTACT_FROM', 'GSX Website <contact@gsxok.com>');
 
-// Set to true only after GSX_CONTACT_FROM above is confirmed to be a real,
-// authorized mailbox for this domain on HostGator. While false, contact.php
-// still runs every validation/anti-spam check for real, but responds with
-// { ok: false, error: 'delivery_unavailable' } instead of attempting to
-// send — the same honest "not connected yet" behavior as the Portal login
-// page, rather than a silently-swallowed message.
-define('GSX_MAIL_READY', false);
+// True now that contact@gsxok.com exists as a real mailbox on HostGator.
+// Only meant to be false if that mailbox goes away: while false,
+// contact.php still runs every validation/anti-spam check for real, but
+// responds with { ok: false, error: 'delivery_unavailable' } instead of
+// attempting to send.
+defined('GSX_MAIL_READY') || define('GSX_MAIL_READY', true);
 
 // ── Anti-spam thresholds — identical values to the Vercel version's
 //    lib/contact/spamGuard.ts, so behavior matches exactly. ────────────────
@@ -76,9 +82,4 @@ define('GSX_DATA_DIR', __DIR__ . '/data');
 //
 // contact.php checks for this file and uses it automatically if present;
 // with no such file, it falls back to mail() exactly as it does today.
-define('GSX_SMTP_ENABLED', false);
-
-$gsxSecretsFile = __DIR__ . '/contact-secrets.php';
-if (is_file($gsxSecretsFile)) {
-    require_once $gsxSecretsFile;
-}
+defined('GSX_SMTP_ENABLED') || define('GSX_SMTP_ENABLED', false);
