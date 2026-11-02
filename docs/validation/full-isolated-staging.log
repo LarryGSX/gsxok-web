@@ -1,0 +1,217 @@
+
+> gsxok-web@0.1.0 check
+> npm run test:security && npm run lint && npm run staging:verify
+
+
+> gsxok-web@0.1.0 test:security
+> node --test tests/*.test.mjs
+
+(node:144428) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/larry/OneDrive/Documents/ChatGPT/Website%20Updates/gsxok-web/lib/portal-entry.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ account navigation is disabled by default (1.0799ms)
+✔ enabled account navigation requires an exact HTTPS origin (0.584ms)
+(node:30844) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/larry/OneDrive/Documents/ChatGPT/Website%20Updates/gsxok-web/lib/webhook-auth.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ webhook fails closed with absent/malformed/wrong secrets (1.1329ms)
+✔ website identity policy denies reset-required and suspended accounts and rereads roles/company (0.7771ms)
+✔ Zod 4 preserves contact validation, bounds, defaults and error behavior (3.3844ms)
+✔ review branch cannot trigger Vercel Git deployments (5.07ms)
+(node:120136) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/larry/OneDrive/Documents/ChatGPT/Website%20Updates/gsxok-web/staging/config.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ local staging is off by default and accepts only exact fictional destinations (2.5598ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 384.6238
+
+> gsxok-web@0.1.0 lint
+> eslint .
+
+
+C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\components\contact\ContactForm.tsx
+  32:32  warning  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\components\contact\ContactForm.tsx:32:32
+  30 |   // Captured once at mount — the server compares this against arrival
+  31 |   // time to reject submissions that couldn't plausibly be human.
+> 32 |   const renderedAtRef = useRef(Date.now())
+     |                                ^^^^^^^^^^ Cannot call impure function
+  33 |
+  34 |   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  35 |     e.preventDefault()  react-hooks/purity
+
+C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\components\find-gsx\CitySelect.tsx
+  37:18  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\components\find-gsx\CitySelect.tsx:37:18
+  35 |   // selection rather than whatever partial query was last typed.
+  36 |   useEffect(() => {
+> 37 |     if (!isOpen) setQuery(value ?? '')
+     |                  ^^^^^^^^ Avoid calling setState() directly within an effect
+  38 |   }, [value, isOpen])
+  39 |
+  40 |   const filtered = useMemo(() => {  react-hooks/set-state-in-effect
+
+C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\components\layout\Nav.tsx
+  62:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\components\layout\Nav.tsx:62:21
+  60 |   }, [])
+  61 |
+> 62 |   useEffect(() => { setOpen(false) }, [pathname])
+     |                     ^^^^^^^ Avoid calling setState() directly within an effect
+  63 |
+  64 |   return (
+  65 |     <header  react-hooks/set-state-in-effect
+
+C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\components\media\VerticalVideo.tsx
+  29:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\components\media\VerticalVideo.tsx:29:5
+  27 |   useEffect(() => {
+  28 |     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+> 29 |     setReducedMotion(mq.matches)
+     |     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |     const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
+  31 |     mq.addEventListener('change', handler)
+  32 |     return () => mq.removeEventListener('change', handler)  react-hooks/set-state-in-effect
+
+C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\staging\next-image.tsx
+  8:10  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+
+✖ 5 problems (0 errors, 5 warnings)
+
+
+> gsxok-web@0.1.0 staging:verify
+> node staging/run.mjs
+
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "gsx_web_staging", schema "public" at "127.0.0.1:54329"
+
+The database is already in sync with the Prisma schema.
+
+▲ Next.js 16.4.4 (webpack)
+✓ Running next.config.ts took 56ms
+
+  Creating an optimized production build ...
+⚠ Compiled with warnings in 2.4min
+
+./node_modules/@sanity-labs/groq-wasm/dist/index.browser.js
+The generated code contains 'async/await' because this module is using "topLevelAwait".
+However, your target environment does not appear to support 'async/await'.
+As a result, the code may not run as expected or may cause runtime errors.
+
+Import trace for requested module:
+./node_modules/@sanity-labs/groq-wasm/dist/index.browser.js
+./node_modules/@sanity/vision/lib/VistaGui-D3NHSIsK.js
+./node_modules/@sanity/vision/lib/SanityVision-tHhBPbsg.js
+./node_modules/@sanity/vision/lib/index.js
+./sanity/sanity.config.ts
+./app/studio/[[...tool]]/page.tsx
+
+./node_modules/@sanity-labs/groq-wasm/dist/index.browser.js
+The generated code contains 'async/await' because this module is using "topLevelAwait".
+However, your target environment does not appear to support 'async/await'.
+As a result, the code may not run as expected or may cause runtime errors.
+
+Import trace for requested module:
+./node_modules/@sanity-labs/groq-wasm/dist/index.browser.js
+./node_modules/@sanity/vision/lib/VistaGui-D3NHSIsK.js
+./node_modules/@sanity/vision/lib/SanityVision-tHhBPbsg.js
+./node_modules/@sanity/vision/lib/index.js
+./sanity/sanity.config.ts
+./app/studio/[[...tool]]/page.tsx
+
+  Running TypeScript ...
+  Finished TypeScript in 21.2s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/14) ...
+  Generating static pages using 7 workers (3/14) 
+  Generating static pages using 7 workers (6/14) 
+  Generating static pages using 7 workers (10/14) 
+✓ Generating static pages using 7 workers (14/14) in 7.7s
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)                  Revalidate  Expire
+┌ ○ /                                1h      1y
+├ ○ /_not-found
+├ ○ /about
+├ ƒ /account
+├ ƒ /api/auth/[...nextauth]
+├ ƒ /api/contact
+├ ƒ /api/revalidate
+├ ƒ /api/staging/content
+├ ƒ /api/staging/identity
+├ ƒ /api/zip-lookup
+├ ○ /contact
+├ ○ /find-gsx                        1h      1y
+├ ○ /learn
+├ ○ /products
+└ ƒ /studio/[[...tool]]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+▲ Next.js 16.4.4
+- Local:         http://127.0.0.1:4316
+- Network:       http://127.0.0.1:4316
+✓ Ready in 807ms
+✓ Running next.config.ts took 84ms
+
+Running 6 tests using 1 worker
+
+(node:75044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 staging\compatibility.spec.mjs:16:1 › content queries, navigation, optimized images and disabled portal entry (6.1s)
+  ok 2 staging\compatibility.spec.mjs:59:1 › existing credentials provider uses only fictional PostgreSQL accounts and refreshes server authorization (943ms)
+[auth][error] CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fQ (C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\.next\server\chunks\6413.js:404:41057)
+    at async fZ (C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\.next\server\chunks\6413.js:404:50655)
+    at async f_ (C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\.next\server\chunks\6413.js:404:54910)
+    at async r0.renderToResponse (C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:14399)
+    at async r0.executeRequest (C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:17556)
+    at async _ (C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\.next\server\app\api\auth\[...nextauth]\route.js:1:4099)
+    at async r0.handleResponse (C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:134333)
+    at async aa (C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\.next\server\app\api\auth\[...nextauth]\route.js:1:5194)
+    at async B (C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\.next\server\app\api\auth\[...nextauth]\route.js:1:7451)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\node_modules\next\dist\server\base-server.js:1773:9)
+  ok 3 staging\compatibility.spec.mjs:88:1 › reset-required fixture cannot authenticate (129ms)
+  ok 4 staging\compatibility.spec.mjs:92:1 › fictional SDK publishing protocol and authenticated Next revalidation update local cached content (1.0s)
+  ok 5 staging\compatibility.spec.mjs:127:1 › Studio route renders its client shell without connecting to a hosted dataset (6.4s)
+[contact] RESEND_API_KEY is not set, cannot deliver message
+  ok 6 staging\compatibility.spec.mjs:141:1 › legacy redirects, local ZIP lookup and contact safeguards preserve behavior without sending mail (405ms)
+
+  6 passed (26.6s)
+Fictional local staging complete. Hosted Sanity authorization/publishing remains a separate acceptance gate.

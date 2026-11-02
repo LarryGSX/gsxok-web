@@ -6,7 +6,13 @@ export const sanityConfig = {
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production',
   apiVersion: '2024-01-01',
-  useCdn: process.env.NODE_ENV === 'production',
+  useCdn:
+    process.env.NEXT_PUBLIC_GSX_LOCAL_STAGING === '1'
+      ? false
+      : process.env.NODE_ENV === 'production',
+  ...(process.env.NEXT_PUBLIC_GSX_LOCAL_STAGING === '1'
+    ? { apiHost: process.env.NEXT_PUBLIC_GSX_STAGE_API_ORIGIN, useProjectHostname: false }
+    : {}),
 }
 
 // Main read client — used in Server Components and route handlers.

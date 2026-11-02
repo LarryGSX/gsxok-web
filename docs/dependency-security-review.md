@@ -1,6 +1,7 @@
 # Website dependency and security review — 2026-11-02
 
 Scope: `codex/customer-account-foundation`; draft review only, no merge/deployment.
+Follow-up compatibility verification and remaining hosted acceptance gaps are documented in [isolated staging review](isolated-staging-review.md). The latest audit after adding pinned browser/GROQ test tools remains 0 critical / 0 high / 30 moderate / 4 low (`docs/validation/audit-staging.json`).
 The original 53 npm findings were package-level counts (1 critical, 13 high,
 35 moderate, 4 low), including inherited findings. They were not 53 independent
 vulnerabilities and do not prove the deployed website has the same versions.

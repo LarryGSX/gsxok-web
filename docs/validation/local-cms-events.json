@@ -1,0 +1,60 @@
+{
+  "fictional": true,
+  "hostedSanityPublishingVerified": false,
+  "events": [
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"siteSettings\" && _id == \"siteSettings\"][0] {\n    siteName,\n    tagline,\n    logo { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    logoLight { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    heroImage { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    processImage { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    proofPoints,\n    defaultMetaTitle,\n    defaultMetaDescription,\n    ogImage { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    contactEmail,\n    contactPhone,\n    address,\n    siteBanner\n  }\n"
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"product\" && availabilityStatus != \"discontinued\"] | order(name asc) {\n    \n  _id,\n  name,\n  slug { current },\n  shortDescription,\n  availabilityStatus,\n  wholesalePrice,\n  image { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n  productFamily->{ name, slug { current } },\n  productFormat->{ name, slug { current } },\n  cannabinoidProfile[] {\n    cannabinoid->{ name, abbreviation },\n    amountMg\n  },\n  totalMgPerUnit\n\n  }\n"
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"product\" && slug.current == $slug][0] {\n    \n  _id,\n  name,\n  slug { current },\n  shortDescription,\n  availabilityStatus,\n  wholesalePrice,\n  image { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n  productFamily->{ name, slug { current } },\n  productFormat->{ name, slug { current } },\n  cannabinoidProfile[] {\n    cannabinoid->{ name, abbreviation },\n    amountMg\n  },\n  totalMgPerUnit\n,\n    longDescription,\n    gallery[] { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    piecesPerUnit,\n    flavors[]->{ name, slug { current } },\n    legacyPid\n  }\n"
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"product\" && productFamily->slug.current == $familySlug && availabilityStatus != \"discontinued\"]\n  | order(name asc) {\n    \n  _id,\n  name,\n  slug { current },\n  shortDescription,\n  availabilityStatus,\n  wholesalePrice,\n  image { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n  productFamily->{ name, slug { current } },\n  productFormat->{ name, slug { current } },\n  cannabinoidProfile[] {\n    cannabinoid->{ name, abbreviation },\n    amountMg\n  },\n  totalMgPerUnit\n\n  }\n"
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"dispensary\"] | order(name asc) {\n    _id,\n    name,\n    slug { current },\n    address,\n    city,\n    state,\n    zip,\n    coordinates,\n    phone,\n    website,\n    orderingUrl,\n    directionsUrl,\n    availabilityStatus,\n    featuredProducts[]->{ _id, name, slug { current }, image { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n } }\n  }\n"
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"manufacturingStep\"] | order(order asc) {\n    _id,\n    order,\n    title,\n    description,\n    icon { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n }\n  }\n"
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"educationArticle\" && defined(publishedAt)] | order(publishedAt desc) {\n    \n  _id,\n  title,\n  slug { current },\n  summary,\n  publishedAt,\n  heroImage { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n  category->{ name, slug { current } }\n\n  }\n"
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"educationArticle\" && slug.current == $slug][0] {\n    \n  _id,\n  title,\n  slug { current },\n  summary,\n  publishedAt,\n  heroImage { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n  category->{ name, slug { current } }\n,\n    body,\n    seo,\n    relatedProducts[]->{ \n  _id,\n  name,\n  slug { current },\n  shortDescription,\n  availabilityStatus,\n  wholesalePrice,\n  image { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n  productFamily->{ name, slug { current } },\n  productFormat->{ name, slug { current } },\n  cannabinoidProfile[] {\n    cannabinoid->{ name, abbreviation },\n    amountMg\n  },\n  totalMgPerUnit\n }\n  }\n"
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"productFamily\"] | order(name asc) { _id, name, slug { current }, description }\n"
+    },
+    {
+      "type": "fixture-publish",
+      "ids": [
+        "article"
+      ]
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"siteSettings\" && _id == \"siteSettings\"][0] {\n    siteName,\n    tagline,\n    logo { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    logoLight { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    heroImage { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    processImage { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    proofPoints,\n    defaultMetaTitle,\n    defaultMetaDescription,\n    ogImage { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n    contactEmail,\n    contactPhone,\n    address,\n    siteBanner\n  }\n"
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"productFamily\"] | order(name asc) { _id, name, slug { current }, description }\n"
+    },
+    {
+      "type": "query",
+      "query": "\n  *[_type == \"educationArticle\" && defined(publishedAt)] | order(publishedAt desc) {\n    \n  _id,\n  title,\n  slug { current },\n  summary,\n  publishedAt,\n  heroImage { \n  asset->{_id, url, metadata {dimensions, lqip}},\n  alt,\n  hotspot,\n  crop\n },\n  category->{ name, slug { current } }\n\n  }\n"
+    }
+  ]
+}
