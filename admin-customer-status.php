@@ -61,15 +61,6 @@ if ($oldStatus !== $newStatus) {
         ->execute(['status' => $newStatus, 'id' => $userId]);
 
     gsx_admin_audit((int) $admin['id'], 'customer_status_changed', $userId, $oldStatus . ' -> ' . $newStatus);
-
-    // Let the customer know they've been approved. Best-effort and only
-    // when portal email is switched on (see portal-config.php).
-    if ($oldStatus === 'pending' && $newStatus === 'active' && GSX_PORTAL_MAIL_READY) {
-        $message = 'Hi ' . preg_replace('/[\r\n]+/', ' ', (string) $user['first_name']) . ",\n\n"
-            . "Your GSX Portal account has been approved. You can log in here:\n"
-            . rtrim(GSX_SITE_BASE_URL, '/') . "/portal\n";
-        @mail($user['email'], 'Your GSX Portal account is approved', $message, 'From: ' . GSX_PORTAL_MAIL_FROM);
-    }
 }
 
 gsx_admin_json(200, ['ok' => true, 'status' => $newStatus]);
