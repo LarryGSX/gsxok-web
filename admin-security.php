@@ -9,6 +9,14 @@
 
 require_once __DIR__ . '/portal-security.php';
 
+// Same values as portal-config.php. They are repeated here as fallbacks because
+// a portal-config.php written before the staff sign-in existed does not define
+// them, and without GSX_ADMIN_IDLE_SECONDS the session check fails the moment an
+// administrator is signed in (a PHP "Undefined constant" error), so the site
+// treats the administrator like a plain login. Customers never reach that line.
+defined('GSX_ADMIN_IDLE_SECONDS') || define('GSX_ADMIN_IDLE_SECONDS', 60 * 60);
+defined('GSX_ADMIN_PASSWORD_MIN') || define('GSX_ADMIN_PASSWORD_MIN', 8);
+
 /** Admin responses are never cached by the browser or any proxy. */
 function gsx_admin_json(int $status, array $body): void
 {
