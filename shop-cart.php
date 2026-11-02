@@ -9,5 +9,6 @@ header('Content-Type: application/json');
 header('Cache-Control: no-store');
 
 $customer = gsx_shop_customer();
+gsx_require_price_list($customer);
 
 gsx_json_response(200, gsx_cart_response(gsx_db(), $customer));

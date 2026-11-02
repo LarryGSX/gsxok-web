@@ -7,8 +7,8 @@ import { portalGet, portalPost } from '@/lib/portal/api'
 // The administrator view, shown on /portal in place of the customer screen
 // when the signed-in account is a GSX administrator (see PortalAuth.tsx,
 // which loads this only for admins). Set a first password, then manage
-// customer accounts (approve, reject, suspend,
-// reactivate) and orders. Every action is re-checked on the
+// customer accounts (approve with a pricing choice, reject, suspend,
+// reactivate, change pricing) and orders. Every action is re-checked on the
 // server; nothing here works without an administrator session.
 
 const inputClass =
@@ -29,6 +29,8 @@ const quietLinkClass =
 const GENERIC_ERROR = 'Something went wrong. Please try again.'
 
 type CustomerStatus = 'pending' | 'active' | 'suspended' | 'password_reset_required'
+type CustomerFilter = CustomerStatus | 'all'
+type PricingTier = 'old' | 'new'
 type OrderStatus = 'in_progress' | 'completed'
 
 interface Customer {
@@ -43,6 +45,7 @@ interface Customer {
   zip: string
   ommaLicense: string
   status: CustomerStatus
+  pricingTier: PricingTier | null
   createdAt: string
 }
 
@@ -70,6 +73,19 @@ const STATUS_LABEL: Record<CustomerStatus, string> = {
   active: 'Active',
   suspended: 'Suspended',
   password_reset_required: 'Needs password reset',
+}
+
+const CUSTOMER_FILTERS: { key: CustomerFilter; label: string }[] = [
+  { key: 'pending', label: 'Pending' },
+  { key: 'active', label: 'Active' },
+  { key: 'suspended', label: 'Suspended' },
+  { key: 'password_reset_required', label: 'Needs reset' },
+  { key: 'all', label: 'All' },
+]
+
+const PRICING_LABEL: Record<PricingTier, string> = {
+  old: 'Old / Grandfathered',
+  new: 'New / Standard',
 }
 
 const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
@@ -258,16 +274,71 @@ function ChangePasswordForm({ forced, onDone }: { forced: boolean; onDone: () =>
 
 // ── Customers ──────────────────────────────────────────────────────────
 
+// Shown on every approved account: which of the two price lists it is on, and
+// a way to change it. Nothing is pre-selected for an account with no pricing yet.
+function PricingRow({
+  customer,
+  busy,
+  onSetPricing,
+}: {
+  customer: Customer
+  busy: boolean
+  onSetPricing: (id: number, tier: PricingTier) => void
+}) {
+  const selectId = useId()
+  const current = customer.pricingTier
+  const [choice, setChoice] = useState<PricingTier | ''>(current ?? '')
+
+  useEffect(() => {
+    setChoice(current ?? '')
+  }, [current])
+
+  return (
+    <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-2">
+      <div className="flex flex-col gap-1">
+        <label htmlFor={selectId} className="text-label" style={{ color: 'var(--color-muted)' }}>
+          Pricing: {current ? PRICING_LABEL[current] : 'not set'}
+        </label>
+        <select
+          id={selectId}
+          value={choice}
+          disabled={busy}
+          onChange={(e) => setChoice(e.target.value as PricingTier | '')}
+          className={smallInputClass}
+          style={{ width: '220px' }}
+        >
+          {current === null && <option value="">Choose pricing</option>}
+          <option value="old">{PRICING_LABEL.old}</option>
+          <option value="new">{PRICING_LABEL.new}</option>
+        </select>
+      </div>
+      <button
+        type="button"
+        disabled={busy || choice === '' || choice === current}
+        onClick={() => choice !== '' && onSetPricing(customer.id, choice)}
+        className={outlineButtonClass}
+      >
+        Save pricing
+      </button>
+    </div>
+  )
+}
+
 function CustomerCard({
   customer,
   busy,
   onChangeStatus,
+  onSetPricing,
 }: {
   customer: Customer
   busy: boolean
-  onChangeStatus: (id: number, status: 'pending' | 'active' | 'suspended') => void
+  onChangeStatus: (id: number, status: 'pending' | 'active' | 'suspended', pricingTier?: PricingTier) => void
+  onSetPricing: (id: number, tier: PricingTier) => void
 }) {
   const c = customer
+  // The pricing an administrator picks while approving a pending account. No
+  // default: Approve stays disabled until one of the two is chosen.
+  const [approveTier, setApproveTier] = useState<PricingTier | null>(null)
   return (
     <li className="bg-white border border-[var(--color-border)] p-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
       <div className="flex flex-col gap-1 min-w-0">
@@ -292,18 +363,43 @@ function CustomerCard({
           OMMA license: <span style={{ color: 'var(--color-dark)' }}>{c.ommaLicense}</span> &middot; Signed up{' '}
           {formatDate(c.createdAt)}
         </p>
+        {c.status !== 'pending' && <PricingRow customer={c} busy={busy} onSetPricing={onSetPricing} />}
       </div>
 
       <div className="flex flex-wrap gap-3 md:justify-end shrink-0">
         {c.status === 'pending' && (
-          <>
-            <button type="button" disabled={busy} onClick={() => onChangeStatus(c.id, 'active')} className={solidButtonClass}>
-              Approve
-            </button>
-            <button type="button" disabled={busy} onClick={() => onChangeStatus(c.id, 'suspended')} className={outlineButtonClass}>
-              Reject
-            </button>
-          </>
+          <div className="flex flex-col gap-4 md:items-end">
+            <fieldset disabled={busy} className="flex flex-col gap-2">
+              <legend className="text-label" style={{ color: 'var(--color-muted)' }}>
+                Pricing (required to approve)
+              </legend>
+              {(['old', 'new'] as const).map((t) => (
+                <label key={t} className="flex items-center gap-2 text-body-sm cursor-pointer" style={{ color: 'var(--color-dark)' }}>
+                  <input
+                    type="radio"
+                    name={`pricing-${c.id}`}
+                    value={t}
+                    checked={approveTier === t}
+                    onChange={() => setApproveTier(t)}
+                  />
+                  {PRICING_LABEL[t]}
+                </label>
+              ))}
+            </fieldset>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={busy || approveTier === null}
+                onClick={() => approveTier && onChangeStatus(c.id, 'active', approveTier)}
+                className={solidButtonClass}
+              >
+                Approve
+              </button>
+              <button type="button" disabled={busy} onClick={() => onChangeStatus(c.id, 'suspended')} className={outlineButtonClass}>
+                Reject
+              </button>
+            </div>
+          </div>
         )}
         {c.status === 'active' && (
           <button type="button" disabled={busy} onClick={() => onChangeStatus(c.id, 'suspended')} className={outlineButtonClass}>
@@ -311,9 +407,21 @@ function CustomerCard({
           </button>
         )}
         {c.status === 'suspended' && (
-          <button type="button" disabled={busy} onClick={() => onChangeStatus(c.id, 'active')} className={outlineButtonClass}>
-            Reactivate
-          </button>
+          <div className="flex flex-col gap-2 md:items-end">
+            <button
+              type="button"
+              disabled={busy || c.pricingTier === null}
+              onClick={() => onChangeStatus(c.id, 'active')}
+              className={outlineButtonClass}
+            >
+              Reactivate
+            </button>
+            {c.pricingTier === null && (
+              <p className="text-body-sm" style={{ color: 'var(--color-muted)', maxWidth: '22ch' }}>
+                Save a pricing choice first.
+              </p>
+            )}
+          </div>
         )}
         {c.status === 'password_reset_required' && (
           <p className="text-body-sm" style={{ color: 'var(--color-muted)', maxWidth: '22ch' }}>
@@ -329,6 +437,7 @@ function CustomersSection({ onSignedOut }: { onSignedOut: () => void }) {
   const searchId = useId()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [filter, setFilter] = useState<CustomerFilter>('pending')
   const [query, setQuery] = useState('')
   const [busyId, setBusyId] = useState<number | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -349,17 +458,24 @@ function CustomersSection({ onSignedOut }: { onSignedOut: () => void }) {
     load()
   }, [load])
 
-  async function changeStatus(id: number, status: 'pending' | 'active' | 'suspended') {
+  async function changeStatus(id: number, status: 'pending' | 'active' | 'suspended', pricingTier?: PricingTier) {
     setBusyId(id)
     setActionError(null)
     try {
-      const res = await portalPost<{ ok?: boolean; error?: string }>('/admin-customer-status.php', { id, status })
+      const res = await portalPost<{ ok?: boolean; error?: string; pricingTier?: PricingTier | null }>(
+        '/admin-customer-status.php',
+        pricingTier ? { id, status, pricingTier } : { id, status }
+      )
       if (res.status === 200 && res.data?.ok) {
-        setCustomers((list) => list.map((c) => (c.id === id ? { ...c, status } : c)))
+        setCustomers((list) =>
+          list.map((c) => (c.id === id ? { ...c, status, pricingTier: res.data?.pricingTier ?? c.pricingTier } : c))
+        )
       } else if (res.status === 401) {
         return onSignedOut()
       } else if (res.data?.error === 'awaiting_password_reset') {
         setActionError('That account is waiting for the customer to set a new password.')
+      } else if (res.data?.error === 'pricing_required') {
+        setActionError('Choose a pricing tier for that account first.')
       } else {
         setActionError(GENERIC_ERROR)
       }
@@ -369,17 +485,56 @@ function CustomersSection({ onSignedOut }: { onSignedOut: () => void }) {
     setBusyId(null)
   }
 
+  async function setPricing(id: number, pricingTier: PricingTier) {
+    setBusyId(id)
+    setActionError(null)
+    try {
+      const res = await portalPost<{ ok?: boolean; error?: string }>('/admin-customer-pricing.php', { id, pricingTier })
+      if (res.status === 200 && res.data?.ok) {
+        setCustomers((list) => list.map((c) => (c.id === id ? { ...c, pricingTier } : c)))
+      } else if (res.status === 401) {
+        return onSignedOut()
+      } else {
+        setActionError(GENERIC_ERROR)
+      }
+    } catch {
+      setActionError(GENERIC_ERROR)
+    }
+    setBusyId(null)
+  }
+
+  const counts = useMemo(() => {
+    const result: Record<CustomerFilter, number> = {
+      pending: 0,
+      active: 0,
+      suspended: 0,
+      password_reset_required: 0,
+      all: customers.length,
+    }
+    for (const c of customers) result[c.status] += 1
+    return result
+  }, [customers])
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
     return customers.filter((c) => {
+      if (filter !== 'all' && c.status !== filter) return false
       if (!q) return true
       return [c.firstName, c.lastName, c.email, c.phone, c.ommaLicense, c.city].join(' ').toLowerCase().includes(q)
     })
-  }, [customers, query])
+  }, [customers, filter, query])
 
   return (
     <div>
-      <div className="flex flex-col gap-1.5" style={{ maxWidth: '420px' }}>
+      <FilterPills
+        filters={CUSTOMER_FILTERS}
+        value={filter}
+        counts={counts}
+        onChange={setFilter}
+        label="Filter customers by status"
+      />
+
+      <div className="mt-5 flex flex-col gap-1.5" style={{ maxWidth: '420px' }}>
         <label htmlFor={searchId} className="text-label" style={{ color: 'var(--color-muted)' }}>
           Search
         </label>
@@ -400,7 +555,7 @@ function CustomersSection({ onSignedOut }: { onSignedOut: () => void }) {
 
       {visible.length === 0 && !loadError ? (
         <p className="text-body-sm mt-6" style={{ color: 'var(--color-muted)' }}>
-          {customers.length === 0 ? 'No customer accounts yet.' : 'No accounts match your search.'}
+          {customers.length === 0 ? 'No customer accounts yet.' : 'No accounts match this view.'}
         </p>
       ) : (
         <ul className="mt-6 flex flex-col gap-4">
@@ -410,6 +565,7 @@ function CustomersSection({ onSignedOut }: { onSignedOut: () => void }) {
               customer={c}
               busy={busyId === c.id}
               onChangeStatus={changeStatus}
+              onSetPricing={setPricing}
             />
           ))}
         </ul>

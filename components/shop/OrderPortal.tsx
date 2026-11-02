@@ -229,6 +229,9 @@ export function OrderPortal({
   const [companies, setCompanies] = useState<Company[] | null>(null)
   const [orders, setOrders] = useState<OrderRow[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  // True when an administrator has not assigned this account a pricing tier
+  // yet: the server then refuses to show prices or take orders.
+  const [pricingMissing, setPricingMissing] = useState(false)
 
   const [cartLines, setCartLines] = useState<CartLine[] | null>(null)
   const [cartTotal, setCartTotal] = useState('0.00')
@@ -253,8 +256,12 @@ export function OrderPortal({
 
   const loadProducts = useCallback(async () => {
     try {
-      const { status, data } = await portalGet<{ ok?: boolean; products?: Product[] }>('/shop-products.php')
+      const { status, data } = await portalGet<{ ok?: boolean; error?: string; products?: Product[] }>('/shop-products.php')
       if (status === 401) return onSignedOut()
+      if (status === 403 && data?.error === 'pricing_not_set') {
+        setPricingMissing(true)
+        return setProducts([])
+      }
       if (status === 200 && data?.ok && data.products) return setProducts(data.products)
       setLoadError(GENERIC_ERROR)
     } catch {
@@ -288,6 +295,10 @@ export function OrderPortal({
     try {
       const { status, data } = await portalGet<CartResponse>('/shop-cart.php')
       if (status === 401) return onSignedOut()
+      if (status === 403 && data?.error === 'pricing_not_set') {
+        setPricingMissing(true)
+        return setCartLines([])
+      }
       if (status === 200 && data?.ok) return applyCart(data)
       setLoadError(GENERIC_ERROR)
     } catch {
@@ -451,6 +462,12 @@ export function OrderPortal({
         </div>
       )}
 
+      {pricingMissing && (
+        <div className="mt-6">
+          <Notice message="Your account's pricing has not been set up yet, so ordering is not available. Please contact GSX at sales@gsxok.com." />
+        </div>
+      )}
+
       {/* ── Products ─────────────────────────────────────────────── */}
       {view === 'shop' && (
         <div className="mt-8">
@@ -458,7 +475,7 @@ export function OrderPortal({
             <p className="text-body-sm" style={{ color: 'var(--color-muted)' }}>
               Loading products&hellip;
             </p>
-          ) : products.length === 0 ? (
+          ) : pricingMissing ? null : products.length === 0 ? (
             <p className="text-body-sm" style={{ color: 'var(--color-muted)' }}>
               No products are available right now.
             </p>

@@ -18,9 +18,10 @@ SET NAMES utf8mb4;
 -- ─────────────────────────────────────────────────────────────
 -- products
 -- `price` is the standard (current) price. `legacy_price` is the grandfathered
--- (original) price; NULL means "same as standard". Which customers are charged
--- which is decided in one place: gsx_price_list_for_customer() in shop-lib.php.
--- Images are files in /images/products/.
+-- (original) price; NULL means "same as standard". Which one a customer is
+-- charged is that customer's `customer_pricing` row (below), chosen by an
+-- administrator, and read in one place: gsx_price_list_for_customer() in
+-- shop-lib.php. Images are files in /images/products/.
 -- ─────────────────────────────────────────────────────────────
 CREATE TABLE `products` (
   `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -38,6 +39,24 @@ CREATE TABLE `products` (
 
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_products_legacy_id` (`legacy_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ─────────────────────────────────────────────────────────────
+-- customer_pricing: which of the two price lists a customer is charged from.
+-- 'old' = Old / Grandfathered, 'new' = New / Standard. An administrator
+-- chooses it when approving an account and can change it later. A customer
+-- with NO row here has no pricing assigned yet and cannot see prices or order
+-- until an administrator assigns one; nothing is ever assigned automatically.
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE `customer_pricing` (
+  `user_id`     INT UNSIGNED NOT NULL,
+  `tier`        ENUM('old', 'new') NOT NULL,
+  `set_by`      INT UNSIGNED NULL,
+  `created_at`  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_pricing_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ─────────────────────────────────────────────────────────────

@@ -19,9 +19,13 @@ function gsx_shop_customer(): array
         gsx_json_response(401, ['ok' => false, 'error' => 'not_signed_in']);
     }
 
+    // pricing_tier is the administrator's choice for this account ('old',
+    // 'new', or NULL if none has been assigned yet). It only ever comes from
+    // the database, never from the request.
     $stmt = gsx_db()->prepare(
-        'SELECT id, first_name, last_name, email, phone, account_status, legacy_id
-         FROM users WHERE id = :id'
+        'SELECT u.id, u.first_name, u.last_name, u.email, u.phone, u.account_status, p.tier AS pricing_tier
+         FROM users u LEFT JOIN customer_pricing p ON p.user_id = u.id
+         WHERE u.id = :id'
     );
     $stmt->execute(['id' => $userId]);
     $user = $stmt->fetch();
@@ -34,19 +38,35 @@ function gsx_shop_customer(): array
 
 /**
  * Which of the two price lists a customer is charged from: 'grandfathered'
- * (the original prices) or 'standard' (the current prices).
- *
- * PROVISIONAL: Larry has said original customers keep the grandfathered
- * chocolate prices, but the old site itself had a single price list and no
- * source defines who counts as an "original" customer. Until Larry answers,
- * this treats a customer whose portal account is linked to an account from
- * the old GSX system (users.legacy_id) as original. Whatever he decides, this
- * is the ONLY place the rule needs to change; everything that shows or charges
- * a price goes through it.
+ * (Old / Grandfathered) or 'standard' (New / Standard), or null if an
+ * administrator has not assigned this account a pricing tier yet. The tier is
+ * the administrator's explicit choice, stored in customer_pricing; nothing is
+ * worked out from the account's history. Everything that shows or charges a
+ * price goes through this function.
  */
-function gsx_price_list_for_customer(array $customer): string
+function gsx_price_list_for_customer(array $customer): ?string
 {
-    return $customer['legacy_id'] !== null ? 'grandfathered' : 'standard';
+    switch ($customer['pricing_tier'] ?? null) {
+        case 'old':
+            return 'grandfathered';
+        case 'new':
+            return 'standard';
+        default:
+            return null;
+    }
+}
+
+/**
+ * The customer's price list, or stop with 403 if no pricing has been assigned
+ * to the account yet. An account is never guessed onto a price list.
+ */
+function gsx_require_price_list(array $customer): string
+{
+    $priceList = gsx_price_list_for_customer($customer);
+    if ($priceList === null) {
+        gsx_json_response(403, ['ok' => false, 'error' => 'pricing_not_set']);
+    }
+    return $priceList;
 }
 
 /** A product's price in cents for the given price list. */
@@ -89,7 +109,7 @@ function gsx_cart_lines(PDO $db, array $customer): array
          ORDER BY c.created_at, c.product_id'
     );
     $stmt->execute(['user_id' => $customer['id']]);
-    $priceList = gsx_price_list_for_customer($customer);
+    $priceList = gsx_require_price_list($customer);
 
     $lines = [];
     foreach ($stmt->fetchAll() as $r) {

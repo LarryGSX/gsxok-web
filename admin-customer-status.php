@@ -2,6 +2,11 @@
 /**
  * Approve, suspend, or reactivate a customer account. Administrators only.
  *
+ * An account can only become active with a pricing tier ('old' = Old /
+ * Grandfathered, 'new' = New / Standard) on file. Approving a pending account
+ * must say which one in the same request (pricingTier); reactivating an
+ * account that already has one keeps it. A tier is never defaulted or guessed.
+ *
  * Allowed changes are limited to pending / active / suspended. An account
  * still waiting on its forced password reset (a migrated old account) can't
  * be changed here: it becomes active by itself once the customer sets a
@@ -33,7 +38,13 @@ if (!is_array($body)) {
 $userId = isset($body['id']) && is_int($body['id']) ? $body['id'] : 0;
 $newStatus = isset($body['status']) && is_string($body['status']) ? $body['status'] : '';
 
-if ($userId <= 0 || !in_array($newStatus, ['pending', 'active', 'suspended'], true)) {
+$pricingTier = $body['pricingTier'] ?? null;
+
+if (
+    $userId <= 0
+    || !in_array($newStatus, ['pending', 'active', 'suspended'], true)
+    || ($pricingTier !== null && !in_array($pricingTier, ['old', 'new'], true))
+) {
     gsx_admin_json(400, ['ok' => false, 'error' => 'invalid_fields']);
 }
 
@@ -57,10 +68,41 @@ if ($newStatus === 'active' && ($user['password_hash'] === null || $user['passwo
 }
 
 if ($oldStatus !== $newStatus) {
-    $db->prepare('UPDATE users SET account_status = :status WHERE id = :id')
-        ->execute(['status' => $newStatus, 'id' => $userId]);
+    $storedTier = false;
+    if ($newStatus === 'active') {
+        $stmt = $db->prepare('SELECT tier FROM customer_pricing WHERE user_id = :id');
+        $stmt->execute(['id' => $userId]);
+        $storedTier = $stmt->fetchColumn();
+        if ($pricingTier === null && $storedTier === false) {
+            gsx_admin_json(400, ['ok' => false, 'error' => 'pricing_required']);
+        }
+    }
+
+    // The status change and the pricing choice are saved together, or not at all.
+    $db->beginTransaction();
+    try {
+        if ($newStatus === 'active' && $pricingTier !== null) {
+            $db->prepare(
+                'INSERT INTO customer_pricing (user_id, tier, set_by) VALUES (:id, :tier, :admin)
+                 ON DUPLICATE KEY UPDATE tier = VALUES(tier), set_by = VALUES(set_by)'
+            )->execute(['id' => $userId, 'tier' => $pricingTier, 'admin' => $admin['id']]);
+        }
+        $db->prepare('UPDATE users SET account_status = :status WHERE id = :id')
+            ->execute(['status' => $newStatus, 'id' => $userId]);
+        $db->commit();
+    } catch (Throwable $e) {
+        $db->rollBack();
+        throw $e;
+    }
 
     gsx_admin_audit((int) $admin['id'], 'customer_status_changed', $userId, $oldStatus . ' -> ' . $newStatus);
+    if ($newStatus === 'active' && $pricingTier !== null && $pricingTier !== $storedTier) {
+        gsx_admin_audit((int) $admin['id'], 'customer_pricing_set', $userId, ($storedTier ?: 'none') . ' -> ' . $pricingTier);
+    }
 }
 
-gsx_admin_json(200, ['ok' => true, 'status' => $newStatus]);
+$stmt = $db->prepare('SELECT tier FROM customer_pricing WHERE user_id = :id');
+$stmt->execute(['id' => $userId]);
+$tier = $stmt->fetchColumn();
+
+gsx_admin_json(200, ['ok' => true, 'status' => $newStatus, 'pricingTier' => $tier === false ? null : $tier]);

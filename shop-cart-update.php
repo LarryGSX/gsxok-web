@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 gsx_require_csrf();
 $customer = gsx_shop_customer();
+gsx_require_price_list($customer);
 $body = gsx_json_body();
 
 $action = isset($body['action']) && is_string($body['action']) ? $body['action'] : '';
