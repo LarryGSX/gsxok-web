@@ -37,8 +37,9 @@ define('GSX_SESSION_LIFETIME_SECONDS', 60 * 60 * 8); // 8 hours
 
 // ── Login rate limiting / lockout ────────────────────────────────────────
 // Checked per-email AND per-IP (see login_attempts table) — either one
-// tripping the threshold blocks further attempts on that axis.
-define('GSX_LOGIN_MAX_ATTEMPTS', 5);
+// reaching its limit blocks further attempts.
+define('GSX_LOGIN_MAX_ATTEMPTS', 5); // failed attempts per email
+define('GSX_LOGIN_MAX_ATTEMPTS_PER_IP', 20); // failed attempts per IP address (across all emails)
 define('GSX_LOGIN_WINDOW_MINUTES', 15);
 
 // ── Password reset tokens ────────────────────────────────────────────────
@@ -67,19 +68,14 @@ define('GSX_PORTAL_MAIL_FROM', 'GSX Portal <contact@gsxok.com>');
 define('GSX_ADMIN_IDLE_SECONDS', 60 * 60); // 1 hour
 define('GSX_ADMIN_PASSWORD_MIN', 8);
 
-// Where a "new account requested" notice is sent. Best-effort only: the
-// signup is saved whether or not the email goes through. At most
-// GSX_SIGNUP_NOTIFY_MAX_PER_HOUR notices go out per hour, so a bot
-// flooding the signup form can't also flood this inbox.
-defined('GSX_SIGNUP_NOTIFY_TO') || define('GSX_SIGNUP_NOTIFY_TO', 'contact@gsxok.com');
-defined('GSX_SIGNUP_NOTIFY_ENABLED') || define('GSX_SIGNUP_NOTIFY_ENABLED', true);
-define('GSX_SIGNUP_NOTIFY_MAX_PER_HOUR', 5);
-
-// Anti-spam on the signup form, same idea as the contact form: a hidden
-// field real visitors never see, and a minimum time between the form
-// opening and submitting. Lower than the contact form's 3 seconds because
-// browser autofill can legitimately fill this longer form in a moment.
-define('GSX_REGISTER_MIN_SUBMIT_MS', 1500);
+// ── Ordering ─────────────────────────────────────────────────────────────
+// Where each new order is emailed (the same sales mailbox the old site used),
+// and the address those emails come from. Must be a real mailbox on this domain.
+defined('GSX_ORDER_NOTIFY_TO') || define('GSX_ORDER_NOTIFY_TO', 'sales@gsxok.com');
+defined('GSX_ORDER_FROM') || define('GSX_ORDER_FROM', 'GSX Orders <sales@gsxok.com>');
+// A technical safety bound on a single quantity, so a typo or a bad request
+// can't overflow the database. It is not a GSX business rule.
+define('GSX_QTY_TECHNICAL_MAX', 100000);
 
 // ── Registration reasons ─────────────────────────────────────────────────
 // New accounts require admin approval before they can log in — matches

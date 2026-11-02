@@ -5,15 +5,20 @@ import { Button } from '@/components/ui/Button'
 import dynamic from 'next/dynamic'
 import { checkSession, portalPost, type SessionCheckResponse } from '@/lib/portal/api'
 
-// Only downloaded when an administrator signs in, so customers never receive
-// any administrator code.
+// Each signed-in screen is its own file, downloaded only for the kind of
+// account that needs it, so customers never receive any administrator code.
+const loadingNote = (
+  <p className="text-body-sm" style={{ color: 'var(--color-muted)' }}>
+    Loading&hellip;
+  </p>
+)
 const AdminPanel = dynamic(() => import('@/components/admin/AdminPanel').then((m) => m.AdminPanel), {
   ssr: false,
-  loading: () => (
-    <p className="text-body-sm" style={{ color: 'var(--color-muted)' }}>
-      Loading&hellip;
-    </p>
-  ),
+  loading: () => loadingNote,
+})
+const OrderPortal = dynamic(() => import('@/components/shop/OrderPortal').then((m) => m.OrderPortal), {
+  ssr: false,
+  loading: () => loadingNote,
 })
 
 // The unified /portal account page: one page, two sections (log in, and a
@@ -166,7 +171,6 @@ export function PortalAuth() {
   const [sessionUser, setSessionUser] = useState<
     Pick<SessionCheckResponse, 'role' | 'firstName' | 'email' | 'mustChangePassword'>
   >({})
-  const [logoutStatus, setLogoutStatus] = useState<FormStatus>('idle')
 
   const [loginStatus, setLoginStatus] = useState<FormStatus>('idle')
   const [loginMessage, setLoginMessage] = useState<string | null>(null)
@@ -177,9 +181,6 @@ export function PortalAuth() {
   const [forgotMessage, setForgotMessage] = useState<string | null>(null)
 
   const [registerOpen, setRegisterOpen] = useState(false)
-  // When the signup form was opened, sent as elapsed time so the server can
-  // reject submissions too fast to be a person (see register.php).
-  const registerOpenedAtRef = useRef(0)
   const [registerStatus, setRegisterStatus] = useState<FormStatus>('idle')
   const [registerMessage, setRegisterMessage] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
@@ -206,18 +207,9 @@ export function PortalAuth() {
     }
   }, [])
 
-  async function handleLogout() {
-    setLogoutStatus('loading')
-    try {
-      await portalPost('/logout.php', {})
-    } catch {
-      // Even if the request fails, treat the visitor as logged out
-      // locally — the session cookie may still be valid server-side, but
-      // there's nothing more useful to do here than let them try again.
-    }
+  function handleSignedOut() {
     setSessionState('loggedOut')
     setSessionUser({})
-    setLogoutStatus('idle')
   }
 
   async function handleLoginSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -311,7 +303,6 @@ export function PortalAuth() {
       password,
       confirmPassword,
       gsxHpToken: String(formData.get('gsx_hp_token') ?? ''),
-      elapsedMs: Date.now() - registerOpenedAtRef.current,
     }
 
     try {
@@ -331,10 +322,7 @@ export function PortalAuth() {
         return
       }
 
-      if (data?.error === 'too_fast') {
-        setRegisterStatus('error')
-        setRegisterMessage('Please take a moment to review your details, then submit again.')
-      } else if (data?.error === 'email_taken') {
+      if (data?.error === 'email_taken') {
         setRegisterStatus('error')
         setRegisterMessage('An account already exists for that email.')
       } else if (data?.error === 'invalid_fields' && data.fields?.length) {
@@ -374,35 +362,13 @@ export function PortalAuth() {
         firstName={sessionUser.firstName}
         email={sessionUser.email}
         mustChangePassword={sessionUser.mustChangePassword === true}
-        onSignedOut={() => {
-          setSessionState('loggedOut')
-          setSessionUser({})
-        }}
+        onSignedOut={handleSignedOut}
       />
     )
   }
 
   if (sessionState === 'loggedIn') {
-    return (
-      <div style={{ maxWidth: '640px' }}>
-        <p className="text-body" style={{ color: 'var(--color-dark)' }}>
-          {sessionUser.firstName ? `Welcome back, ${sessionUser.firstName}.` : 'You are logged in.'}
-        </p>
-        {sessionUser.email && (
-          <p className="text-body-sm mt-1" style={{ color: 'var(--color-muted)' }}>
-            {sessionUser.email}
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={logoutStatus === 'loading'}
-          className={`${outlineButtonClass} mt-6`}
-        >
-          {logoutStatus === 'loading' ? 'Logging Out' : 'Log Out'}
-        </button>
-      </div>
-    )
+    return <OrderPortal firstName={sessionUser.firstName} email={sessionUser.email} onSignedOut={handleSignedOut} />
   }
 
   return (
@@ -492,10 +458,7 @@ export function PortalAuth() {
         {!registerOpen && (
           <button
             type="button"
-            onClick={() => {
-              registerOpenedAtRef.current = Date.now()
-              setRegisterOpen(true)
-            }}
+            onClick={() => setRegisterOpen(true)}
             className={`${outlineButtonClass} mt-4`}
           >
             Create Account
