@@ -116,3 +116,15 @@ ErrorDocument 404 /404.html
         Deny from all
     </IfModule>
 </FilesMatch>
+
+# Temporary diagnostic files from earlier troubleshooting. They should be
+# deleted from the server; this keeps them unreachable in the meantime.
+<FilesMatch "^gsx-(ordering-check|portal-workspace)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

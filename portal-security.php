@@ -109,8 +109,8 @@ function gsx_client_ip(): string
 
 // ── Login rate limiting / lockout ────────────────────────────────────────
 // Checked against both the submitted email and the requester's IP —
-// tripping either blocks further attempts on that axis, independent of
-// whether the password would have been correct.
+// tripping either limit blocks further attempts, independent of whether
+// the password would have been correct.
 
 function gsx_login_rate_limited(string $email, string $ip): bool
 {
@@ -121,18 +121,27 @@ function gsx_login_rate_limited(string $email, string $ip): bool
     // server and database server agree on timezone, and comparing a
     // PHP-computed timestamp against MySQL's own CURRENT_TIMESTAMP columns
     // would silently drift if they don't.
+    //
+    // Two separate limits: a low one per email (stops password guessing on
+    // one account) and a higher one per IP (stops one machine cycling through
+    // many emails) — high enough that several staff sharing one store
+    // connection can't lock each other out by mistyping.
     $stmt = $db->prepare(
-        'SELECT COUNT(*) FROM login_attempts
+        'SELECT COALESCE(SUM(email = :email_a), 0) AS by_email, COALESCE(SUM(ip_address = :ip_a), 0) AS by_ip
+         FROM login_attempts
          WHERE succeeded = 0 AND attempted_at > (NOW() - INTERVAL :window_minutes MINUTE)
-           AND (email = :email OR ip_address = :ip)'
+           AND (email = :email_b OR ip_address = :ip_b)'
     );
     $stmt->execute([
         'window_minutes' => GSX_LOGIN_WINDOW_MINUTES,
-        'email' => $email,
-        'ip' => $ip,
+        'email_a' => $email,
+        'email_b' => $email,
+        'ip_a' => $ip,
+        'ip_b' => $ip,
     ]);
+    $row = $stmt->fetch();
 
-    return (int) $stmt->fetchColumn() >= GSX_LOGIN_MAX_ATTEMPTS;
+    return (int) $row['by_email'] >= GSX_LOGIN_MAX_ATTEMPTS || (int) $row['by_ip'] >= GSX_LOGIN_MAX_ATTEMPTS_PER_IP;
 }
 
 function gsx_record_login_attempt(string $email, string $ip, bool $succeeded): void
