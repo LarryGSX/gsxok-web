@@ -65,7 +65,7 @@ define('GSX_PORTAL_MAIL_FROM', 'GSX Portal <contact@gsxok.com>');
 // ── Staff (administrator) sign-in ────────────────────────────────────────
 // An admin session expires after this long with no activity.
 define('GSX_ADMIN_IDLE_SECONDS', 60 * 60); // 1 hour
-define('GSX_ADMIN_PASSWORD_MIN', 10);
+define('GSX_ADMIN_PASSWORD_MIN', 8);
 
 // Where a "new account requested" notice is sent. Best-effort only: the
 // signup is saved whether or not the email goes through. At most

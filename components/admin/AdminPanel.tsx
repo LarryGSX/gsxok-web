@@ -184,7 +184,7 @@ function ChangePasswordForm({ forced, onDone }: { forced: boolean; onDone: () =>
       if (data?.error === 'wrong_current_password') {
         setError('The current password is not correct.')
       } else if (data?.error === 'invalid_fields') {
-        setError('The new password must be at least 10 characters and different from the current one.')
+        setError('The new password must be at least 8 characters and different from the current one.')
       } else {
         setError(GENERIC_ERROR)
       }
@@ -211,11 +211,11 @@ function ChangePasswordForm({ forced, onDone }: { forced: boolean; onDone: () =>
       />
       <Field
         id={newId}
-        label="New Password (10+ characters)"
+        label="New Password (8+ characters)"
         name="newPassword"
         type="password"
         autoComplete="new-password"
-        minLength={10}
+        minLength={8}
       />
       <Field
         id={confirmId}
@@ -223,7 +223,7 @@ function ChangePasswordForm({ forced, onDone }: { forced: boolean; onDone: () =>
         name="confirmPassword"
         type="password"
         autoComplete="new-password"
-        minLength={10}
+        minLength={8}
       />
       <div className="mt-1">
         <Button type="submit" variant="primary" size="lg" disabled={busy}>
