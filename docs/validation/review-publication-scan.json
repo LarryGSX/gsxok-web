@@ -1,0 +1,8 @@
+{
+  "base": "origin/Vercel",
+  "branch": "codex/customer-account-foundation",
+  "filesReviewed": 48,
+  "disallowedArtifacts": [],
+  "secretPatternHits": [],
+  "limitation": "Pattern scan only; fictional fixtures and changed source/docs also require human review. No matched data is printed."
+}

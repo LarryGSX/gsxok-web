@@ -1,6 +1,7 @@
 import { revalidateTag } from 'next/cache'
 import { type NextRequest, NextResponse } from 'next/server'
 import { REVALIDATION_TAG } from '@/lib/sanity/client'
+import { validWebhookAuthorization } from '@/lib/webhook-auth'
 
 /**
  * Sanity on-demand revalidation webhook.
@@ -13,13 +14,11 @@ import { REVALIDATION_TAG } from '@/lib/sanity/client'
  * so Next.js will fetch fresh content on the next request.
  */
 export async function POST(req: NextRequest) {
-  const secret = req.headers.get('authorization')?.replace('Bearer ', '')
-
-  if (secret !== process.env.SANITY_REVALIDATE_SECRET) {
+  if (!validWebhookAuthorization(req.headers.get('authorization'), process.env.SANITY_REVALIDATE_SECRET)) {
     return NextResponse.json({ message: 'Invalid secret' }, { status: 401 })
   }
 
-  revalidateTag(REVALIDATION_TAG)
+  revalidateTag(REVALIDATION_TAG, { expire: 0 })
 
   return NextResponse.json({ revalidated: true, tag: REVALIDATION_TAG })
 }

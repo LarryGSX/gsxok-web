@@ -4,44 +4,67 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write .",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "test:portal-entry": "node --test tests/portal-entry.test.mjs",
+    "test:security": "node --test tests/*.test.mjs",
+    "staging:verify": "node staging/run.mjs",
+    "check": "npm run test:security && npm run lint && npm run staging:verify"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",
-    "@prisma/client": "^6.2.1",
+    "@prisma/client": "6.19.3",
+    "@sanity/client": "8.14.1",
     "@sanity/image-url": "^1.1.0",
-    "@sanity/vision": "^3.0.0",
+    "@sanity/vision": "6.21.0",
     "bcryptjs": "^2.4.3",
     "framer-motion": "^11.15.0",
-    "next": "^15.2.3",
-    "next-auth": "^5.0.0-beta.25",
-    "next-sanity": "^9.8.11",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "next": "16.4.4",
+    "next-auth": "5.0.0-beta.32",
+    "next-sanity": "13.4.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "resend": "^4.0.1",
-    "sanity": "^3.67.1",
+    "sanity": "6.21.0",
+    "styled-components": "6.6.0",
     "zipcodes": "^8.0.0",
-    "zod": "^3.24.1"
+    "zod": "4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "^4.0.6",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/zipcodes": "^8.0.5",
-    "eslint": "^9",
-    "eslint-config-next": "15.1.6",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.4",
+    "groq-js": "2.0.1",
     "prettier": "^3.4.2",
-    "prisma": "^6.2.1",
+    "prisma": "6.19.3",
     "tailwindcss": "^4.0.6",
-    "typescript": "^5"
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=24.22.2 <25"
+  },
+  "overrides": {
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.2"
+    },
+    "@vercel/frameworks": {
+      "js-yaml": "3.15.2",
+      "smol-toml": "1.9.1"
+    },
+    "@module-federation/dts-plugin": {
+      "undici": "7.30.1"
+    }
   }
 }

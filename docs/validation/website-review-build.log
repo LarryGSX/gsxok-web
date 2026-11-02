@@ -1,0 +1,74 @@
+
+> gsxok-web@0.1.0 build
+> prisma generate && next build --webpack
+
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v6.19.3) to .\node_modules\@prisma\client in 296ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+▲ Next.js 16.4.4 (webpack)
+✓ Running next.config.ts took 1127ms
+
+  Creating an optimized production build ...
+⚠ Compiled with warnings in 25.1s
+
+./node_modules/@sanity-labs/groq-wasm/dist/index.browser.js
+The generated code contains 'async/await' because this module is using "topLevelAwait".
+However, your target environment does not appear to support 'async/await'.
+As a result, the code may not run as expected or may cause runtime errors.
+
+Import trace for requested module:
+./node_modules/@sanity-labs/groq-wasm/dist/index.browser.js
+./node_modules/@sanity/vision/lib/VistaGui-D3NHSIsK.js
+./node_modules/@sanity/vision/lib/SanityVision-tHhBPbsg.js
+./node_modules/@sanity/vision/lib/index.js
+./sanity/sanity.config.ts
+./app/studio/[[...tool]]/page.tsx
+
+./node_modules/@sanity-labs/groq-wasm/dist/index.browser.js
+The generated code contains 'async/await' because this module is using "topLevelAwait".
+However, your target environment does not appear to support 'async/await'.
+As a result, the code may not run as expected or may cause runtime errors.
+
+Import trace for requested module:
+./node_modules/@sanity-labs/groq-wasm/dist/index.browser.js
+./node_modules/@sanity/vision/lib/VistaGui-D3NHSIsK.js
+./node_modules/@sanity/vision/lib/SanityVision-tHhBPbsg.js
+./node_modules/@sanity/vision/lib/index.js
+./sanity/sanity.config.ts
+./app/studio/[[...tool]]/page.tsx
+
+✓ Compiled successfully in 46s
+  Running TypeScript ...
+  Finished TypeScript in 22.2s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/12) ...
+  Generating static pages using 7 workers (3/12)
+  Generating static pages using 7 workers (6/12)
+  Generating static pages using 7 workers (9/12)
+✓ Generating static pages using 7 workers (12/12) in 1977ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)                  Revalidate  Expire
+┌ ○ /                                1h      1y
+├ ○ /_not-found
+├ ○ /about
+├ ƒ /account
+├ ƒ /api/auth/[...nextauth]
+├ ƒ /api/contact
+├ ƒ /api/revalidate
+├ ƒ /api/zip-lookup
+├ ○ /contact
+├ ○ /find-gsx                        1h      1y
+├ ○ /learn
+├ ○ /products
+└ ƒ /studio/[[...tool]]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

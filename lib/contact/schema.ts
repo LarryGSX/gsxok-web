@@ -33,11 +33,11 @@ export const contactFormSchema = z.object({
   email: z.string().trim().min(1, 'Email is required').max(EMAIL_MAX).email('Enter a valid email address'),
   phone: z.string().trim().max(PHONE_MAX).optional().default(''),
   company: z.string().trim().max(COMPANY_MAX).optional().default(''),
-  reason: z.enum(CONTACT_REASONS, { errorMap: () => ({ message: 'Select a reason for contacting GSX' }) }),
+  reason: z.enum(CONTACT_REASONS, { error: 'Select a reason for contacting GSX' }),
   message: z.string().trim().min(1, 'Message is required').max(MESSAGE_MAX),
   // Anti-spam fields — not shown to the visitor as form content, but part
   // of every real submission from the actual page.
-  renderedAt: z.number({ invalid_type_error: 'Missing form timing data' }),
+  renderedAt: z.number({ error: 'Missing form timing data' }),
   gsxHpToken: z.string().max(HONEYPOT_MAX).optional().default(''),
 })
 

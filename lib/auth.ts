@@ -4,6 +4,7 @@ import { compare } from 'bcryptjs'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { AccountStatus, UserRole } from '@prisma/client'
+import { accountMayAuthenticate, currentWebsiteIdentity } from '@/lib/account-policy'
 
 // ── Type augmentation ─────────────────────────────────────────────────────────
 // Extend the default session/token types so TypeScript knows about our fields.
@@ -58,10 +59,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // 3. Reject non-active accounts before checking password
         //    This gives a consistent UX — the error is shown at the page level,
         //    not here, so the caller should inspect the returned null + check status.
-        if (
-          user.accountStatus === AccountStatus.PENDING ||
-          user.accountStatus === AccountStatus.SUSPENDED
-        ) {
+        if (!accountMayAuthenticate(user.accountStatus)) {
           // Return null; the page redirects to /login?error=account_inactive
           return null
         }
@@ -121,6 +119,11 @@ export async function requireAuth() {
   if (!session?.user) {
     throw new Error('Unauthorized')
   }
+  const current = await currentWebsiteIdentity(session.user.id, async id => {
+    const user = await db.user.findUnique({where:{id},select:{id:true,role:true,accountStatus:true,company:{select:{id:true}}}})
+    return user ? {...user,companyId:user.company?.id??null} : null
+  })
+  session.user = {...session.user,id:current.id,role:current.role as UserRole,accountStatus:current.accountStatus as AccountStatus,companyId:current.companyId}
   return session
 }
 

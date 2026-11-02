@@ -1,0 +1,806 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@eslint-community/eslint-utils": {
+      "name": "@eslint-community/eslint-utils",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "eslint"
+      ],
+      "effects": [
+        "@next/eslint-plugin-next",
+        "@typescript-eslint/utils",
+        "eslint"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@eslint-community/eslint-utils",
+        "node_modules/@next/eslint-plugin-next/node_modules/@eslint-community/eslint-utils"
+      ],
+      "fixAvailable": {
+        "name": "eslint",
+        "version": "4.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "@eslint/config-array": {
+      "name": "@eslint/config-array",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "minimatch"
+      ],
+      "effects": [
+        "eslint"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@eslint/config-array"
+      ],
+      "fixAvailable": {
+        "name": "eslint",
+        "version": "4.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "@eslint/eslintrc": {
+      "name": "@eslint/eslintrc",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "minimatch"
+      ],
+      "effects": [
+        "eslint"
+      ],
+      "range": "0.0.1 || >=0.1.1",
+      "nodes": [
+        "node_modules/@eslint/eslintrc"
+      ],
+      "fixAvailable": {
+        "name": "eslint",
+        "version": "4.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "@next/eslint-plugin-next": {
+      "name": "@next/eslint-plugin-next",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@eslint-community/eslint-utils"
+      ],
+      "effects": [
+        "eslint-config-next"
+      ],
+      "range": ">=16.3.0-canary.0",
+      "nodes": [
+        "node_modules/@next/eslint-plugin-next"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    },
+    "@oclif/core": {
+      "name": "@oclif/core",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "minimatch"
+      ],
+      "effects": [
+        "@oclif/plugin-help",
+        "@oclif/plugin-not-found",
+        "@sanity-labs/oclif-plugin-skills-flag",
+        "@sanity/cli",
+        "@sanity/cli-build",
+        "@sanity/cli-core",
+        "@sanity/runtime-cli",
+        "@sanity/workflow-cli"
+      ],
+      "range": ">=3.22.0",
+      "nodes": [
+        "node_modules/@oclif/core"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@oclif/plugin-help": {
+      "name": "@oclif/plugin-help",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@oclif/core"
+      ],
+      "effects": [
+        "@sanity/cli",
+        "@sanity/runtime-cli",
+        "@sanity/workflow-cli"
+      ],
+      "range": ">=6.0.18",
+      "nodes": [
+        "node_modules/@oclif/plugin-help"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@oclif/plugin-not-found": {
+      "name": "@oclif/plugin-not-found",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@oclif/core"
+      ],
+      "effects": [
+        "@sanity/cli"
+      ],
+      "range": ">=3.1.1",
+      "nodes": [
+        "node_modules/@oclif/plugin-not-found"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@react-email/render": {
+      "name": "@react-email/render",
+      "severity": "low",
+      "isDirect": false,
+      "via": [
+        "html-to-text"
+      ],
+      "effects": [
+        "resend"
+      ],
+      "range": "0.0.4 - 2.1.1",
+      "nodes": [
+        "node_modules/@react-email/render"
+      ],
+      "fixAvailable": {
+        "name": "resend",
+        "version": "6.37.0",
+        "isSemVerMajor": true
+      }
+    },
+    "@sanity-labs/oclif-plugin-skills-flag": {
+      "name": "@sanity-labs/oclif-plugin-skills-flag",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@oclif/core"
+      ],
+      "effects": [
+        "@sanity/runtime-cli"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@sanity-labs/oclif-plugin-skills-flag"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@sanity/blueprints": {
+      "name": "@sanity/blueprints",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@sanity/cli-build"
+      ],
+      "effects": [
+        "@sanity/runtime-cli"
+      ],
+      "range": ">=0.29.0",
+      "nodes": [
+        "node_modules/@sanity/runtime-cli/node_modules/@sanity/blueprints"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@sanity/cli": {
+      "name": "@sanity/cli",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@oclif/core",
+        "@oclif/plugin-help",
+        "@oclif/plugin-not-found",
+        "@sanity/cli-build",
+        "@sanity/cli-core",
+        "@sanity/runtime-cli",
+        "@sanity/workbench-cli",
+        "@sanity/workflow-cli"
+      ],
+      "effects": [
+        "sanity"
+      ],
+      "range": "<=0.0.0-20260612111702 || 3.77.3-next.11 - 3.77.3-server-side-schemas.41 || >=3.78.1-asset-library.59",
+      "nodes": [
+        "node_modules/@sanity/cli"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@sanity/cli-build": {
+      "name": "@sanity/cli-build",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@oclif/core",
+        "@sanity/cli-core",
+        "@sanity/workbench-cli",
+        "sanity"
+      ],
+      "effects": [
+        "@sanity/blueprints",
+        "@sanity/cli",
+        "@sanity/runtime-cli"
+      ],
+      "range": "<=0.0.0-20260612111702 || >=0.2.0",
+      "nodes": [
+        "node_modules/@sanity/cli-build"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@sanity/cli-core": {
+      "name": "@sanity/cli-core",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@oclif/core"
+      ],
+      "effects": [
+        "@sanity/cli",
+        "@sanity/cli-build",
+        "@sanity/runtime-cli",
+        "@sanity/workbench-cli",
+        "@sanity/workflow-cli"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@sanity/cli-core"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@sanity/runtime-cli": {
+      "name": "@sanity/runtime-cli",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@oclif/core",
+        "@oclif/plugin-help",
+        "@sanity-labs/oclif-plugin-skills-flag",
+        "@sanity/blueprints",
+        "@sanity/cli-build",
+        "@sanity/cli-core"
+      ],
+      "effects": [
+        "@sanity/cli"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@sanity/runtime-cli"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@sanity/vision": {
+      "name": "@sanity/vision",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "sanity"
+      ],
+      "effects": [],
+      "range": "3.0.0-canary.186 - 3.0.0-v3-v2-pte.56 || >=6.0.0-next.12",
+      "nodes": [
+        "node_modules/@sanity/vision"
+      ],
+      "fixAvailable": {
+        "name": "@sanity/vision",
+        "version": "5.31.2",
+        "isSemVerMajor": true
+      }
+    },
+    "@sanity/workbench-cli": {
+      "name": "@sanity/workbench-cli",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@sanity/cli-core"
+      ],
+      "effects": [
+        "@sanity/cli",
+        "@sanity/cli-build"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@sanity/workbench-cli"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@sanity/workflow-cli": {
+      "name": "@sanity/workflow-cli",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@oclif/core",
+        "@oclif/plugin-help",
+        "@sanity/cli-core"
+      ],
+      "effects": [
+        "@sanity/cli"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@sanity/cli/node_modules/@sanity/workflow-cli"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "@typescript-eslint/eslint-plugin": {
+      "name": "@typescript-eslint/eslint-plugin",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@typescript-eslint/parser",
+        "@typescript-eslint/type-utils",
+        "@typescript-eslint/utils",
+        "eslint"
+      ],
+      "effects": [
+        "typescript-eslint"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@typescript-eslint/eslint-plugin"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    },
+    "@typescript-eslint/parser": {
+      "name": "@typescript-eslint/parser",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@typescript-eslint/typescript-estree",
+        "eslint"
+      ],
+      "effects": [
+        "@typescript-eslint/eslint-plugin",
+        "typescript-eslint"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@typescript-eslint/parser"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    },
+    "@typescript-eslint/type-utils": {
+      "name": "@typescript-eslint/type-utils",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@typescript-eslint/typescript-estree",
+        "@typescript-eslint/utils",
+        "eslint"
+      ],
+      "effects": [
+        "@typescript-eslint/eslint-plugin"
+      ],
+      "range": ">=5.9.2-alpha.0",
+      "nodes": [
+        "node_modules/@typescript-eslint/type-utils"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    },
+    "@typescript-eslint/typescript-estree": {
+      "name": "@typescript-eslint/typescript-estree",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "minimatch"
+      ],
+      "effects": [
+        "@typescript-eslint/parser",
+        "@typescript-eslint/type-utils",
+        "@typescript-eslint/utils",
+        "typescript-eslint"
+      ],
+      "range": ">=6.16.0",
+      "nodes": [
+        "node_modules/@typescript-eslint/typescript-estree"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    },
+    "@typescript-eslint/utils": {
+      "name": "@typescript-eslint/utils",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@eslint-community/eslint-utils",
+        "@typescript-eslint/typescript-estree",
+        "eslint"
+      ],
+      "effects": [
+        "@typescript-eslint/eslint-plugin",
+        "@typescript-eslint/type-utils",
+        "typescript-eslint"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@typescript-eslint/utils"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    },
+    "deepmerge": {
+      "name": "deepmerge",
+      "severity": "low",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1243505,
+          "name": "deepmerge",
+          "dependency": "deepmerge",
+          "title": "deepmerge mergeObject() allows prototype poisoning of returned objects",
+          "url": "https://github.com/advisories/GHSA-gcqx-w48m-w2h4",
+          "severity": "low",
+          "cwe": [
+            "CWE-1321"
+          ],
+          "cvss": {
+            "score": 5.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+          },
+          "range": ">=4.2.0 <=4.3.1"
+        }
+      ],
+      "effects": [
+        "html-to-text"
+      ],
+      "range": ">=4.2.0",
+      "nodes": [
+        "node_modules/deepmerge"
+      ],
+      "fixAvailable": {
+        "name": "resend",
+        "version": "6.37.0",
+        "isSemVerMajor": true
+      }
+    },
+    "eslint": {
+      "name": "eslint",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "@eslint-community/eslint-utils",
+        "@eslint/config-array",
+        "@eslint/eslintrc",
+        "minimatch"
+      ],
+      "effects": [
+        "@eslint-community/eslint-utils",
+        "@typescript-eslint/eslint-plugin",
+        "@typescript-eslint/parser",
+        "@typescript-eslint/type-utils",
+        "@typescript-eslint/utils",
+        "eslint-config-next",
+        "typescript-eslint"
+      ],
+      "range": "0.7.1 - 2.0.0-rc.1 || >=4.1.0",
+      "nodes": [
+        "node_modules/eslint"
+      ],
+      "fixAvailable": {
+        "name": "eslint",
+        "version": "4.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "eslint-config-next": {
+      "name": "eslint-config-next",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "@next/eslint-plugin-next",
+        "eslint",
+        "eslint-plugin-import",
+        "eslint-plugin-jsx-a11y",
+        "eslint-plugin-react",
+        "typescript-eslint"
+      ],
+      "effects": [],
+      "range": ">=10.2.1-canary.2",
+      "nodes": [
+        "node_modules/eslint-config-next"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    },
+    "eslint-plugin-import": {
+      "name": "eslint-plugin-import",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "minimatch"
+      ],
+      "effects": [
+        "eslint-config-next"
+      ],
+      "range": ">=1.15.0",
+      "nodes": [
+        "node_modules/eslint-config-next/node_modules/eslint-plugin-import"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    },
+    "eslint-plugin-jsx-a11y": {
+      "name": "eslint-plugin-jsx-a11y",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "minimatch"
+      ],
+      "effects": [
+        "eslint-config-next"
+      ],
+      "range": ">=6.5.0",
+      "nodes": [
+        "node_modules/eslint-config-next/node_modules/eslint-plugin-jsx-a11y"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    },
+    "eslint-plugin-react": {
+      "name": "eslint-plugin-react",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "minimatch"
+      ],
+      "effects": [
+        "eslint-config-next"
+      ],
+      "range": ">=7.23.0",
+      "nodes": [
+        "node_modules/eslint-config-next/node_modules/eslint-plugin-react"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    },
+    "html-to-text": {
+      "name": "html-to-text",
+      "severity": "low",
+      "isDirect": false,
+      "via": [
+        "deepmerge"
+      ],
+      "effects": [
+        "@react-email/render"
+      ],
+      "range": "6.0.0 - 9.0.5",
+      "nodes": [
+        "node_modules/html-to-text"
+      ],
+      "fixAvailable": {
+        "name": "resend",
+        "version": "6.37.0",
+        "isSemVerMajor": true
+      }
+    },
+    "minimatch": {
+      "name": "minimatch",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1244012,
+          "name": "minimatch",
+          "dependency": "minimatch",
+          "title": "minimatch has potential denial of service via globparts amplification",
+          "url": "https://github.com/advisories/GHSA-g3hv-75wg-m249",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-405"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": "<11.0.1"
+        }
+      ],
+      "effects": [
+        "@eslint/config-array",
+        "@eslint/eslintrc",
+        "@oclif/core",
+        "@typescript-eslint/typescript-estree",
+        "eslint",
+        "eslint-plugin-import",
+        "eslint-plugin-jsx-a11y",
+        "eslint-plugin-react"
+      ],
+      "range": "<11.0.1",
+      "nodes": [
+        "node_modules/@eslint/config-array/node_modules/minimatch",
+        "node_modules/@eslint/eslintrc/node_modules/minimatch",
+        "node_modules/eslint-config-next/node_modules/minimatch",
+        "node_modules/eslint/node_modules/minimatch",
+        "node_modules/minimatch"
+      ],
+      "fixAvailable": {
+        "name": "eslint",
+        "version": "4.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "next-sanity": {
+      "name": "next-sanity",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "sanity"
+      ],
+      "effects": [],
+      "range": "0.6.7 || 0.9.0-new-preview-mode.1 - 2.1.0 || >=12.1.2",
+      "nodes": [
+        "node_modules/next-sanity"
+      ],
+      "fixAvailable": {
+        "name": "next-sanity",
+        "version": "11.6.13",
+        "isSemVerMajor": true
+      }
+    },
+    "resend": {
+      "name": "resend",
+      "severity": "low",
+      "isDirect": true,
+      "via": [
+        "@react-email/render"
+      ],
+      "effects": [],
+      "range": "0.10.0 - 6.1.1 || 6.2.0-canary.0 - 6.2.0-preview-contacts.0",
+      "nodes": [
+        "node_modules/resend"
+      ],
+      "fixAvailable": {
+        "name": "resend",
+        "version": "6.37.0",
+        "isSemVerMajor": true
+      }
+    },
+    "sanity": {
+      "name": "sanity",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "@sanity/cli"
+      ],
+      "effects": [
+        "@sanity/cli-build",
+        "@sanity/vision",
+        "next-sanity"
+      ],
+      "range": "3.94.1-next.0.6739e10a32 - 3.94.1 || 5.11.1-alpha.12 - 5.12.0-next.23 || 5.12.1-alpha.15 - 5.13.0-next.38 || 5.13.1-alpha.17 - 5.14.0-next.51 || >=5.14.2-alpha.14",
+      "nodes": [
+        "node_modules/sanity"
+      ],
+      "fixAvailable": {
+        "name": "sanity",
+        "version": "5.14.1",
+        "isSemVerMajor": true
+      }
+    },
+    "typescript-eslint": {
+      "name": "typescript-eslint",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@typescript-eslint/eslint-plugin",
+        "@typescript-eslint/parser",
+        "@typescript-eslint/typescript-estree",
+        "@typescript-eslint/utils",
+        "eslint"
+      ],
+      "effects": [
+        "eslint-config-next"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/typescript-eslint"
+      ],
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "12.0.4",
+        "isSemVerMajor": true
+      }
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 4,
+      "moderate": 30,
+      "high": 0,
+      "critical": 0,
+      "total": 34
+    },
+    "dependencies": {
+      "prod": 1042,
+      "dev": 287,
+      "optional": 159,
+      "peer": 2,
+      "peerOptional": 0,
+      "total": 1439
+    }
+  }
+}

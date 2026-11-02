@@ -1,0 +1,26 @@
+
+> gsxok-web@0.1.0 test:security
+> node --test tests/*.test.mjs
+
+(node:137304) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/larry/OneDrive/Documents/ChatGPT/Website%20Updates/gsxok-web/lib/portal-entry.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ account navigation is disabled by default (0.8196ms)
+✔ enabled account navigation requires an exact HTTPS origin (0.3993ms)
+(node:29740) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/larry/OneDrive/Documents/ChatGPT/Website%20Updates/gsxok-web/lib/webhook-auth.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ webhook fails closed with absent/malformed/wrong secrets (1.1193ms)
+✔ website identity policy denies reset-required and suspended accounts and rereads roles/company (0.6216ms)
+✔ Zod 4 preserves contact validation, bounds, defaults and error behavior (2.7705ms)
+✔ review branch cannot trigger Vercel Git deployments (12.5906ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2633.8842
