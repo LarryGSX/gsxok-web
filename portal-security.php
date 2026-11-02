@@ -8,6 +8,12 @@
 require_once __DIR__ . '/portal-config.php';
 require_once __DIR__ . '/portal-db.php';
 
+// Same value as portal-config.php. Repeated as a fallback because the
+// portal-config.php that was already on the server before the per-IP limit
+// existed does not define it, and without it every login (customer and
+// administrator) stops with an "Undefined constant" error.
+defined('GSX_LOGIN_MAX_ATTEMPTS_PER_IP') || define('GSX_LOGIN_MAX_ATTEMPTS_PER_IP', 20);
+
 // ── Sessions ─────────────────────────────────────────────────────────────
 
 /**
