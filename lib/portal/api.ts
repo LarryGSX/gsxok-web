@@ -29,6 +29,8 @@ export async function portalPost<T>(path: string, payload: unknown): Promise<{ s
 }
 
 export interface SessionCheckResponse {
+  role?: 'admin' | 'customer'
+  mustChangePassword?: boolean
   ok: boolean
   loggedIn: boolean
   firstName?: string
@@ -42,4 +44,10 @@ export async function checkSession(): Promise<SessionCheckResponse> {
     return { ok: false, loggedIn: false }
   }
   return data
+}
+
+export async function portalGet<T>(path: string): Promise<{ status: number; data: T | null }> {
+  const res = await fetch(path, { cache: 'no-store' })
+  const data: T | null = await res.json().catch(() => null)
+  return { status: res.status, data }
 }

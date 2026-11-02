@@ -2,7 +2,19 @@
 
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { checkSession, portalPost } from '@/lib/portal/api'
+import dynamic from 'next/dynamic'
+import { checkSession, portalPost, type SessionCheckResponse } from '@/lib/portal/api'
+
+// Only downloaded when an administrator signs in, so customers never receive
+// any administrator code.
+const AdminPanel = dynamic(() => import('@/components/admin/AdminPanel').then((m) => m.AdminPanel), {
+  ssr: false,
+  loading: () => (
+    <p className="text-body-sm" style={{ color: 'var(--color-muted)' }}>
+      Loading&hellip;
+    </p>
+  ),
+})
 
 // The unified /portal account page: one page, two sections (log in, and a
 // "New to GSX?" area that expands an inline registration form) — never a
@@ -151,7 +163,9 @@ export function PortalAuth() {
   // the confirmation/Log Out panel below) or 'loggedOut' (shows the
   // normal login/register forms).
   const [sessionState, setSessionState] = useState<'checking' | 'loggedIn' | 'loggedOut'>('checking')
-  const [sessionUser, setSessionUser] = useState<{ firstName?: string; email?: string }>({})
+  const [sessionUser, setSessionUser] = useState<
+    Pick<SessionCheckResponse, 'role' | 'firstName' | 'email' | 'mustChangePassword'>
+  >({})
   const [logoutStatus, setLogoutStatus] = useState<FormStatus>('idle')
 
   const [loginStatus, setLoginStatus] = useState<FormStatus>('idle')
@@ -163,6 +177,9 @@ export function PortalAuth() {
   const [forgotMessage, setForgotMessage] = useState<string | null>(null)
 
   const [registerOpen, setRegisterOpen] = useState(false)
+  // When the signup form was opened, sent as elapsed time so the server can
+  // reject submissions too fast to be a person (see register.php).
+  const registerOpenedAtRef = useRef(0)
   const [registerStatus, setRegisterStatus] = useState<FormStatus>('idle')
   const [registerMessage, setRegisterMessage] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
@@ -173,7 +190,12 @@ export function PortalAuth() {
     checkSession().then((result) => {
       if (cancelled) return
       if (result.loggedIn) {
-        setSessionUser({ firstName: result.firstName, email: result.email })
+        setSessionUser({
+          role: result.role,
+          firstName: result.firstName,
+          email: result.email,
+          mustChangePassword: result.mustChangePassword,
+        })
         setSessionState('loggedIn')
       } else {
         setSessionState('loggedOut')
@@ -215,7 +237,12 @@ export function PortalAuth() {
 
       if (status === 200 && data?.ok) {
         const result = await checkSession()
-        setSessionUser({ firstName: result.firstName, email: result.email })
+        setSessionUser({
+          role: result.role,
+          firstName: result.firstName,
+          email: result.email,
+          mustChangePassword: result.mustChangePassword,
+        })
         setSessionState('loggedIn')
         setLoginStatus('idle')
         return
@@ -283,6 +310,8 @@ export function PortalAuth() {
       phone: String(formData.get('phone') ?? ''),
       password,
       confirmPassword,
+      gsxHpToken: String(formData.get('gsx_hp_token') ?? ''),
+      elapsedMs: Date.now() - registerOpenedAtRef.current,
     }
 
     try {
@@ -302,7 +331,10 @@ export function PortalAuth() {
         return
       }
 
-      if (data?.error === 'email_taken') {
+      if (data?.error === 'too_fast') {
+        setRegisterStatus('error')
+        setRegisterMessage('Please take a moment to review your details, then submit again.')
+      } else if (data?.error === 'email_taken') {
         setRegisterStatus('error')
         setRegisterMessage('An account already exists for that email.')
       } else if (data?.error === 'invalid_fields' && data.fields?.length) {
@@ -333,6 +365,20 @@ export function PortalAuth() {
           Checking your session&hellip;
         </p>
       </div>
+    )
+  }
+
+  if (sessionState === 'loggedIn' && sessionUser.role === 'admin') {
+    return (
+      <AdminPanel
+        firstName={sessionUser.firstName}
+        email={sessionUser.email}
+        mustChangePassword={sessionUser.mustChangePassword === true}
+        onSignedOut={() => {
+          setSessionState('loggedOut')
+          setSessionUser({})
+        }}
+      />
     )
   }
 
@@ -446,7 +492,10 @@ export function PortalAuth() {
         {!registerOpen && (
           <button
             type="button"
-            onClick={() => setRegisterOpen(true)}
+            onClick={() => {
+              registerOpenedAtRef.current = Date.now()
+              setRegisterOpen(true)
+            }}
             className={`${outlineButtonClass} mt-4`}
           >
             Create Account
@@ -460,6 +509,15 @@ export function PortalAuth() {
       {registerOpen && (
         <div className="mt-6" style={{ maxWidth: '720px' }}>
           <form onSubmit={handleRegisterSubmit}>
+            {/* Spam trap: invisible and unreachable for real visitors, so
+                anything filled in here is a bot. */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}>
+              <label>
+                Leave this field empty
+                <input type="text" name="gsx_hp_token" tabIndex={-1} autoComplete="off" />
+              </label>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor={firstNameId} className="text-label" style={{ color: 'var(--color-muted)' }}>

@@ -37,6 +37,49 @@ function gsx_reg_str(array $body, string $key): string
     return isset($body[$key]) && is_string($body[$key]) ? trim($body[$key]) : '';
 }
 
+/**
+ * Tells GSX staff a new account is waiting for approval. Best-effort: the
+ * signup is already saved, so nothing here may change the response.
+ */
+function gsx_notify_new_signup(PDO $db, array $c): void
+{
+    try {
+        // Counts the signup just saved too, so "<= max" means this one is
+        // still within the hourly cap.
+        $recent = (int) $db->query(
+            'SELECT COUNT(*) FROM users WHERE created_at > (NOW() - INTERVAL 1 HOUR)'
+        )->fetchColumn();
+        if ($recent > GSX_SIGNUP_NOTIFY_MAX_PER_HOUR) {
+            return;
+        }
+
+        $line = static fn(string $v): string => trim((string) preg_replace('/[\r\n]+/', ' ', $v));
+
+        $body = "A new account was requested on the GSX Portal and is waiting for approval.\n\n"
+            . 'Name: ' . $line($c['first_name'] . ' ' . $c['last_name']) . "\n"
+            . 'Email: ' . $line($c['email']) . "\n"
+            . 'Phone: ' . $line($c['phone']) . "\n"
+            . 'OMMA license: ' . $line($c['omma_license']) . "\n"
+            . 'Address: ' . $line($c['address'] . ', ' . $c['city'] . ', ' . $c['state'] . ' ' . $c['zip']) . "\n\n"
+            . 'To review and approve it, sign in at ' . rtrim(GSX_SITE_BASE_URL, '/') . "/portal with your administrator login.\n";
+
+        @mail(GSX_SIGNUP_NOTIFY_TO, 'New GSX Portal account request', $body, 'From: ' . GSX_PORTAL_MAIL_FROM);
+    } catch (Throwable $e) {
+        error_log('[register] signup notification failed: ' . $e->getMessage());
+    }
+}
+
+// Anti-spam. A filled hidden field gets a fake success so a bot learns
+// nothing. A too-fast submit gets an honest, retryable error instead, so a
+// real person on a very fast autofill is never silently dropped.
+if (gsx_reg_str($body, 'gsxHpToken') !== '') {
+    gsx_json_response(200, ['ok' => true, 'status' => 'pending']);
+}
+$elapsedMs = isset($body['elapsedMs']) && is_numeric($body['elapsedMs']) ? (float) $body['elapsedMs'] : 0.0;
+if ($elapsedMs < GSX_REGISTER_MIN_SUBMIT_MS) {
+    gsx_json_response(400, ['ok' => false, 'error' => 'too_fast']);
+}
+
 $firstName = gsx_reg_str($body, 'firstName');
 $lastName = gsx_reg_str($body, 'lastName');
 $address = gsx_reg_str($body, 'address');
@@ -107,6 +150,20 @@ try {
         gsx_json_response(409, ['ok' => false, 'error' => 'email_taken']);
     }
     throw $e;
+}
+
+if (GSX_SIGNUP_NOTIFY_ENABLED && $status === 'pending') {
+    gsx_notify_new_signup($db, [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'address' => $address,
+        'city' => $city,
+        'state' => $state,
+        'zip' => $zip,
+        'omma_license' => $ommaLicense,
+        'email' => $email,
+        'phone' => $phone,
+    ]);
 }
 
 gsx_json_response(200, ['ok' => true, 'status' => $status]);

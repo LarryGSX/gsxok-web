@@ -1,14 +1,20 @@
 <?php
 /**
- * Login endpoint. Deliberately generic on failure — the same error message
- * comes back whether the email doesn't exist, the password is wrong, or
- * the account is pending/suspended, so a visitor can never use this
- * endpoint to discover which email addresses have accounts, or their
- * status. Rate-limited per email AND per IP (see portal-security.php)
- * before the password is even checked.
+ * The one sign-in for everybody. An email + password that belongs to a GSX
+ * administrator opens an administrator session; one that belongs to a
+ * customer opens a customer session. Nothing in the response says which,
+ * or even whether the email exists: the same generic error comes back for
+ * a wrong password, an unknown email, or a pending/suspended account, so
+ * this endpoint can't be used to discover who has an account. Rate-limited
+ * per email AND per IP (see portal-security.php) before any password is
+ * checked.
+ *
+ * If an email is both an administrator and a customer, the administrator
+ * password opens the administrator session and the customer password opens
+ * the customer one.
  */
 
-require_once __DIR__ . '/portal-security.php';
+require_once __DIR__ . '/admin-security.php';
 
 gsx_start_session();
 
@@ -48,18 +54,47 @@ if (gsx_login_rate_limited($email, $ip)) {
 }
 
 $db = gsx_db();
+
+// Administrator lookup. If the admin tables don't exist yet, treat it as
+// "no such administrator" so customer sign-in keeps working.
+try {
+    $stmt = $db->prepare('SELECT id, password_hash, status FROM admins WHERE email = :email');
+    $stmt->execute(['email' => $email]);
+    $admin = $stmt->fetch();
+} catch (Throwable $e) {
+    error_log('[login] admin lookup failed: ' . $e->getMessage());
+    $admin = false;
+}
+
 $stmt = $db->prepare('SELECT id, password_hash, account_status FROM users WHERE email = :email');
 $stmt->execute(['email' => $email]);
 $user = $stmt->fetch();
 
-$passwordOk = gsx_verify_password($password, $user['password_hash'] ?? null);
-$statusOk = $user !== false && $user['account_status'] === 'active';
+// Both checks always run, so timing doesn't reveal which kind of account
+// (if any) an email has.
+$adminPasswordOk = gsx_verify_password($password, $admin['password_hash'] ?? null);
+$customerPasswordOk = gsx_verify_password($password, $user['password_hash'] ?? null);
 
-if ($user !== false && $passwordOk && $statusOk) {
+if ($admin !== false && $adminPasswordOk && $admin['status'] === 'active') {
     gsx_record_login_attempt($email, $ip, true);
     gsx_prune_login_attempts();
 
     gsx_regenerate_session();
+    unset($_SESSION['user_id']);
+    $_SESSION['admin_id'] = (int) $admin['id'];
+    $_SESSION['admin_last_seen'] = time();
+
+    gsx_admin_audit((int) $admin['id'], 'admin_login', null, null);
+
+    gsx_json_response(200, ['ok' => true]);
+}
+
+if ($user !== false && $customerPasswordOk && $user['account_status'] === 'active') {
+    gsx_record_login_attempt($email, $ip, true);
+    gsx_prune_login_attempts();
+
+    gsx_regenerate_session();
+    unset($_SESSION['admin_id'], $_SESSION['admin_last_seen']);
     $_SESSION['user_id'] = (int) $user['id'];
 
     gsx_json_response(200, ['ok' => true]);

@@ -62,6 +62,25 @@ define('GSX_SITE_BASE_URL', 'https://www.gsxok.com');
 define('GSX_PORTAL_MAIL_READY', false);
 define('GSX_PORTAL_MAIL_FROM', 'GSX Portal <contact@gsxok.com>');
 
+// ── Staff (administrator) sign-in ────────────────────────────────────────
+// An admin session expires after this long with no activity.
+define('GSX_ADMIN_IDLE_SECONDS', 60 * 60); // 1 hour
+define('GSX_ADMIN_PASSWORD_MIN', 10);
+
+// Where a "new account requested" notice is sent. Best-effort only: the
+// signup is saved whether or not the email goes through. At most
+// GSX_SIGNUP_NOTIFY_MAX_PER_HOUR notices go out per hour, so a bot
+// flooding the signup form can't also flood this inbox.
+defined('GSX_SIGNUP_NOTIFY_TO') || define('GSX_SIGNUP_NOTIFY_TO', 'contact@gsxok.com');
+defined('GSX_SIGNUP_NOTIFY_ENABLED') || define('GSX_SIGNUP_NOTIFY_ENABLED', true);
+define('GSX_SIGNUP_NOTIFY_MAX_PER_HOUR', 5);
+
+// Anti-spam on the signup form, same idea as the contact form: a hidden
+// field real visitors never see, and a minimum time between the form
+// opening and submitting. Lower than the contact form's 3 seconds because
+// browser autofill can legitimately fill this longer form in a moment.
+define('GSX_REGISTER_MIN_SUBMIT_MS', 1500);
+
 // ── Registration reasons ─────────────────────────────────────────────────
 // New accounts require admin approval before they can log in — matches
 // the legacy system's 'Pending' status, and the real spam-bot signups
