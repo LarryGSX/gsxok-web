@@ -229,6 +229,16 @@ export function PortalAuth() {
 
       if (status === 200 && data?.ok) {
         const result = await checkSession()
+        if (!result.loggedIn) {
+          // The password was accepted but the server could not open the
+          // session. Say so, rather than showing a "logged in" screen that
+          // has no account behind it (and, for an administrator, no admin page).
+          setLoginStatus('error')
+          setLoginMessage(
+            'Your login was accepted, but your account could not be opened. Please try again, and if it keeps happening, contact GSX.'
+          )
+          return
+        }
         setSessionUser({
           role: result.role,
           firstName: result.firstName,
