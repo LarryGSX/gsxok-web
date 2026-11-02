@@ -34,3 +34,10 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Customer account entry (review only)
+
+See [account integration handoff](docs/customer-account-handoff.md) for the
+disabled-by-default `/account` entry, separate portal origin, test commands and
+release blockers. No existing login, customer credentials or database schema
+was migrated. Do not push/deploy until preview triggers and release readiness
+have been reviewed.
