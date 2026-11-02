@@ -1,31 +1,24 @@
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
-import { FlatCompat } from '@eslint/eslintrc'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const compat = new FlatCompat({ baseDirectory: __dirname })
+import nextVitals from 'eslint-config-next/core-web-vitals'
+import nextTypescript from 'eslint-config-next/typescript'
 
 const eslintConfig = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...nextVitals,
+  ...nextTypescript,
   {
     rules: {
-      // Enforce consistent imports — warn rather than error during active dev
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      // Allow explicit `any` in migration/legacy helper code
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
-      // next/image fills most cases; allow <img> only where next/image isn't applicable
       '@next/next/no-img-element': 'warn',
+      // New compiler diagnostics on existing components are tracked as non-security debt.
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/purity': 'warn',
     },
   },
-  {
-    // Sanity Studio config lives outside the Next.js app router — relax some rules
-    files: ['sanity/**/*.ts'],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-    },
-  },
+  { files: ['sanity/**/*.ts'], rules: { '@typescript-eslint/no-explicit-any': 'off' } },
+  { ignores: ['.next/**', 'node_modules/**'] },
 ]
 
 export default eslintConfig

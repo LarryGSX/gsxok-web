@@ -1,0 +1,74 @@
+
+> gsxok-web@0.1.0 lint
+> eslint .
+
+
+<workspace>\components\contact\ContactForm.tsx
+  32:32  warning  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+<workspace>\components\contact\ContactForm.tsx:32:32
+  30 |   // Captured once at mount — the server compares this against arrival
+  31 |   // time to reject submissions that couldn't plausibly be human.
+> 32 |   const renderedAtRef = useRef(Date.now())
+     |                                ^^^^^^^^^^ Cannot call impure function
+  33 |
+  34 |   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  35 |     e.preventDefault()  react-hooks/purity
+
+<workspace>\components\find-gsx\CitySelect.tsx
+  37:18  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+<workspace>\components\find-gsx\CitySelect.tsx:37:18
+  35 |   // selection rather than whatever partial query was last typed.
+  36 |   useEffect(() => {
+> 37 |     if (!isOpen) setQuery(value ?? '')
+     |                  ^^^^^^^^ Avoid calling setState() directly within an effect
+  38 |   }, [value, isOpen])
+  39 |
+  40 |   const filtered = useMemo(() => {  react-hooks/set-state-in-effect
+
+<workspace>\components\layout\Nav.tsx
+  62:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+<workspace>\components\layout\Nav.tsx:62:21
+  60 |   }, [])
+  61 |
+> 62 |   useEffect(() => { setOpen(false) }, [pathname])
+     |                     ^^^^^^^ Avoid calling setState() directly within an effect
+  63 |
+  64 |   return (
+  65 |     <header  react-hooks/set-state-in-effect
+
+<workspace>\components\media\VerticalVideo.tsx
+  29:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+<workspace>\components\media\VerticalVideo.tsx:29:5
+  27 |   useEffect(() => {
+  28 |     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+> 29 |     setReducedMotion(mq.matches)
+     |     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |     const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
+  31 |     mq.addEventListener('change', handler)
+  32 |     return () => mq.removeEventListener('change', handler)  react-hooks/set-state-in-effect
+
+✖ 4 problems (0 errors, 4 warnings)

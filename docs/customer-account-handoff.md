@@ -1,3 +1,5 @@
+Current status: [formal dependency/security review](dependency-security-review.md) supersedes the initial audit and build status below.
+
 # Independent customer account entry
 
 Review branch: `codex/customer-account-foundation`. No deployment authorized.

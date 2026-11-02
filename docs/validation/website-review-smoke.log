@@ -1,0 +1,16 @@
+✔ production build serves / locally (172.2113ms)
+✔ production build serves /about locally (50.4692ms)
+✔ production build serves /products locally (55.3253ms)
+✔ production build serves /contact locally (23.8702ms)
+✔ production build serves /find-gsx locally (33.2946ms)
+✔ production build serves /account locally (78.9969ms)
+✔ production build serves /studio locally (481.2196ms)
+✔ unconfigured local webhook rejects unauthenticated mutation (35.507ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1025.7165
