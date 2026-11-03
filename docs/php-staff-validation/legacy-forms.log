@@ -1,0 +1,15 @@
+(node:147132) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/larry/OneDrive/Documents/ChatGPT/Website%20Updates/gsxok-web/lib/portal/password-policy.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\larry\OneDrive\Documents\ChatGPT\Website Updates\gsxok-web\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ browser and PHP password policies agree on whitespace, Unicode, NUL and byte boundaries (113.7784ms)
+✔ legacy reset and staff password forms render the new minimum and visible byte-limit instructions (193.7586ms)
+✔ shared legacy registration input requires twelve characters while existing-password login remains unrestricted (57.5349ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 883.0797

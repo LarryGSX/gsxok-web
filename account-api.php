@@ -1,9 +1,16 @@
 <?php
-require_once __DIR__.'/account-lib.php';
+require_once __DIR__.'/account-review-lib.php';
 gsx_start_session(); $u=gsx_account_user(); $db=gsx_db();
 if ($_SERVER['REQUEST_METHOD']==='GET') {
   $q=$db->prepare('SELECT id,name,address,city,state,zip,omma_license,email,phone FROM companies WHERE user_id=? ORDER BY id'); $q->execute([$u['id']]);
-  gsx_json_response(200,['ok'=>true,'account'=>$u,'companies'=>$q->fetchAll(),'csrfToken'=>gsx_csrf_token(),'capabilities'=>['transactions'=>false]]);
+  $companies=$q->fetchAll();
+  foreach($companies as &$company) {
+    $revision=gsx_profile_revision((int)$company['id']);
+    if($revision['profile']) $company=array_replace($company,$revision['profile']);
+    $company['profileVersion']=$revision['version'];
+  }
+  unset($company);
+  gsx_json_response(200,['ok'=>true,'account'=>$u,'companies'=>$companies,'csrfToken'=>gsx_csrf_token(),'capabilities'=>['transactions'=>false]]);
 }
 $b=gsx_account_body(); $action=$b['action']??'';
 if ($action==='profile-request') {
@@ -15,11 +22,18 @@ if ($action==='profile-request') {
     if (!is_string($profile[$key]??null) || strlen($profile[$key])>255 || trim($profile[$key])==='') gsx_json_response(400,['ok'=>false,'error'=>'invalid_fields']);
     $claim[$key]=trim($profile[$key]);
   }
-  // Scope ownership in the INSERT itself; never update the source company.
-  $q=$db->prepare('INSERT INTO account_profile_requests(user_id,company_id,profile_json) SELECT user_id,id,? FROM companies WHERE id=? AND user_id=?');
-  $q->execute([json_encode($claim),$id,$u['id']]);
-  if (!$q->rowCount()) gsx_json_response(404,['ok'=>false,'error'=>'not_found']);
-  gsx_account_audit((int)$u['id'],'profile_requested');
+  if (!filter_var($claim['email'],FILTER_VALIDATE_EMAIL) || strlen($claim['state'])!==2 || strlen($claim['zip'])>10 || strlen($claim['phone'])>30) gsx_review_error(400,'invalid_fields');
+  $db->beginTransaction();
+  try {
+    $q=$db->prepare('SELECT id FROM companies WHERE id=? AND user_id=? FOR UPDATE');$q->execute([$id,$u['id']]);
+    if (!$q->fetch()) gsx_review_error(404,'not_found');
+    $q=$db->prepare('SELECT auth_version,account_access FROM users WHERE id=? FOR UPDATE');$q->execute([$u['id']]);$current=$q->fetch();
+    if($current['account_access']!=='approved' || (int)$current['auth_version']!==(int)$_SESSION['auth_version']) gsx_review_error(401,'not_signed_in');
+    $revision=gsx_profile_revision($id,true)['version'];
+    if(isset($b['profileVersion']) && $b['profileVersion']!==$revision) gsx_review_error(409,'stale_profile');
+    $db->prepare('INSERT INTO account_profile_requests(user_id,company_id,profile_json,base_revision) VALUES (?,?,?,?)')->execute([$u['id'],$id,json_encode($claim),$revision]);
+    gsx_account_audit((int)$u['id'],'profile_requested');$db->commit();
+  } catch(Throwable $e) {if($db->inTransaction())$db->rollBack();throw $e;}
   gsx_json_response(202,['ok'=>true,'status'=>'pending_review']);
 }
 if (in_array($action,['password','revoke-sessions'],true)) {

@@ -4,15 +4,16 @@ import {readFileSync,existsSync,mkdirSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
+import {staffScenarios} from './staff-security.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const php=process.env.GSX_TEST_PHP,ext=process.env.GSX_TEST_PHP_EXT;
 assert(php&&ext&&process.env.GSX_FICTIONAL_TEST==='yes','Explicit portable PHP and fictional opt-in required');
 assert(!existsSync(resolve(root,'portal-secrets.php')),'Refuse any real/local secret file');
-const args=['-n','-d',`extension_dir=${ext}`,'-d','extension=php_mbstring.dll','-d','extension=php_pdo_mysql.dll'];
+const args=['-n','-d',`extension_dir=${ext}`,'-d','extension=php_mbstring.dll','-d','extension=php_pdo_mysql.dll','-d','extension=php_openssl.dll'];
 const script=name=>resolve(root,'tests/php',name);
 assert.equal(JSON.parse(execFileSync(php,[...args,script('transport.php')],{encoding:'utf8'})).error,'https_required');
 console.log('PASS forged forwarded TLS cannot authorize HTTP outside explicit loopback test mode');
-const sql=(sql,params=[])=>JSON.parse(execFileSync(php,[...args,script('db.php')],{input:JSON.stringify({sql,params}),encoding:'utf8'}));
+const sql=(sql,params=[])=>JSON.parse(execFileSync(php,[...args,script('db.php')],{input:JSON.stringify({sql,params}),encoding:'utf8',stdio:['pipe','pipe','pipe']}));
 const clean=()=>sql('DELETE FROM account_requests');
 const pass=message=>console.log('PASS '+message);
 class Client {
@@ -50,15 +51,15 @@ try {
  const n=new Client();r=await n.post('register.php',registration);assert.equal(r.status,200);
  assert.deepEqual(await n.post('register.php',registration).then(x=>({status:x.status,data:x.data})),{status:r.status,data:r.data});
  assert.equal((await n.login(registration.email,password)).status,401);pass('registration duplicate response matches new account; unverified account denied');
- assert.equal((await admin.post('admin-account-access.php',{id:3,access:'approved',currentPassword:'Fictional password 42!'})).status,409);
+ assert.equal((await admin.post('admin-account-access.php',{reason:'Fictional account access review',id:3,access:'approved',currentPassword:'Fictional password 42!'})).status,409);
  assert.equal((await n.post('register.php',{...registration,email:'short@example.invalid',password:'short',confirmPassword:'short'})).status,400);
  assert.equal((await n.post('register.php',{...registration,email:'long@example.invalid',password:'x'.repeat(73),confirmPassword:'x'.repeat(73)})).status,400);
  pass('unverified approval denied; weak and bcrypt-truncated new passwords rejected');
  const verify=token(registration.email,'verify');
  assert.equal((await n.post('account-token.php',{action:'verify',token:verify})).status,200);
  assert.equal((await n.post('account-token.php',{action:'verify',token:verify})).status,400);
- clean();assert.equal((await n.post('admin-account-access.php',{id:3,access:'approved',currentPassword:password})).status,401);
- assert.equal((await admin.post('admin-account-access.php',{id:3,access:'approved',currentPassword:'Fictional password 42!'})).status,200);
+ clean();assert.equal((await n.post('admin-account-access.php',{reason:'Fictional account access review',id:3,access:'approved',currentPassword:password})).status,401);
+ assert.equal((await admin.post('admin-account-access.php',{reason:'Fictional account access review',id:3,access:'approved',currentPassword:'Fictional password 42!'})).status,200);
  assert.equal(sql('SELECT account_status FROM users WHERE id=3')[0].account_status,'pending');
  assert.equal((await n.login(registration.email,password)).status,200);assert.equal((await n.login(registration.email,password.trim())).status,401);pass('single-use email verification, staff-only account approval, exact password preservation; no transaction activation');
  clean(); const unknown=await n.post('forgot-password.php',{email:'absent@example.invalid'});const known=await n.post('forgot-password.php',{email:registration.email});assert.equal(known.status,unknown.status);assert.deepEqual(known.data,unknown.data);
@@ -76,9 +77,9 @@ try {
  assert.equal((await a.request('test-session-clock',{idle:true})).status,200);assert.equal((await a.request('account-api.php')).status,401);
  assert.equal((await a.login()).status,200);await a.request('test-session-clock',{absolute:true});assert.equal((await a.request('account-api.php')).status,401);pass('idle and absolute expiration independently enforced');
  clean();assert.equal((await b.request('account-api.php')).status,200);
- assert.equal((await admin.post('admin-account-access.php',{id:2,access:'suspended',currentPassword:'Fictional password 42!'})).status,200);
+ assert.equal((await admin.post('admin-account-access.php',{reason:'Fictional account access review',id:2,access:'suspended',currentPassword:'Fictional password 42!'})).status,200);
  assert.equal((await b.request('account-api.php')).status,401);
- assert.equal((await admin.post('admin-account-access.php',{id:2,access:'approved',currentPassword:'Fictional password 42!'})).status,200);
+ assert.equal((await admin.post('admin-account-access.php',{reason:'Fictional account access review',id:2,access:'approved',currentPassword:'Fictional password 42!'})).status,200);
  assert.equal((await b.request('account-api.php')).status,401);pass('suspension/reapproval cannot resurrect prior sessions');
  clean();for(let i=0;i<10;i++)assert.equal((await a.post('forgot-password.php',{email:'absent@example.invalid'},{'X-Forwarded-For':'192.0.2.'+i,'X-Real-IP':'198.51.100.'+i})).status,200);
  assert.equal((await a.post('forgot-password.php',{email:'different@example.invalid'},{'X-Forwarded-For':'203.0.113.42'})).status,429);
@@ -96,6 +97,7 @@ try {
  assert.equal(Number(sql('SELECT COUNT(*) AS n FROM account_mail_queue WHERE sent_at IS NULL')[0].n),0);pass('mail delivery failure retains durable queue job and retry succeeds locally');
  assert.equal(sql('SELECT account_status FROM users WHERE id=3')[0].account_status,'pending');assert.deepEqual(sql('SELECT id,legacy_id FROM users WHERE id<3 ORDER BY id'),[{id:1,legacy_id:9001},{id:2,legacy_id:9002}]);pass('original legacy identity links preserved after all account operations');
  clean();
+ await staffScenarios({Client,sql,clean,root,pass});
  const {chromium}=createRequire(resolve(root,'../gsx-2/package.json'))('@playwright/test');
  const browser=await chromium.launch({executablePath:process.env.GSX_TEST_BROWSER,headless:true});
  try {
@@ -116,8 +118,30 @@ try {
     if(evidence)await page.screenshot({path:resolve(evidence,`${name}-dashboard.png`),fullPage:true});
     await page.getByRole('button',{name:'Sign out',exact:true}).click();await page.locator('#entry').waitFor({state:'visible'});
     assert.equal(await page.locator('#identity').textContent(),'');assert.equal(await page.locator('#companies form').count(),0);
+    // Drive the actual staff screens with a separate, existing staff identity.
+    clean();sql("INSERT INTO users(first_name,last_name,address,city,state,zip,omma_license,email,phone,password_hash,account_status,email_verified_at) SELECT 'Fictional','Browser',address,city,state,zip,omma_license,?,phone,password_hash,'pending',NOW() FROM users WHERE id=1",[`staffui-${name}@example.invalid`]);
+    const revision=sql("SELECT MAX(id) AS id FROM account_profile_decisions WHERE company_id=1 AND decision='approved'")[0].id;
+    sql('INSERT INTO account_profile_requests(user_id,company_id,profile_json,base_revision) VALUES (1,1,?,?)',[JSON.stringify({name:`Fictional browser ${name}`,address:'Example',city:'Example',state:'OK',zip:'00000',phone:'000',email:'browser@example.invalid'}),revision]);
+    const requestId=sql('SELECT MAX(id) AS id FROM account_profile_requests')[0].id;
+    await page.goto('http://127.0.0.1:4318/staff-accounts.php');
+    const staffLogin=page.locator('#staff-login');await staffLogin.locator('[name=email]').fill('reviewer@example.invalid');await staffLogin.locator('[name=password]').fill('Fictional password 42!');await staffLogin.getByRole('button',{name:'Sign in',exact:true}).click();
+    const card=page.locator('#account-list article').filter({hasText:`staffui-${name}@example.invalid`});await card.waitFor();await card.locator('select').selectOption('approved');await card.locator('[name=reason]').fill('Fictional browser account approval');await page.locator('#review-password').fill('Fictional password 42!');
+    await Promise.all([page.waitForResponse(r=>r.url().endsWith('/admin-account-access.php')&&r.request().method()==='POST'&&r.status()===200),card.getByRole('button',{name:'Confirm review decision'}).click()]);
+    assert.equal(sql('SELECT account_status FROM users WHERE email=?',[`staffui-${name}@example.invalid`])[0].account_status,'pending');
+    await page.waitForFunction(()=>document.querySelector('#review-password').value==='');
+    const profileCard=page.locator('#profile-list article').filter({has:page.getByRole('heading',{name:new RegExp('Request '+requestId+'$')})});await profileCard.waitFor();
+    await profileCard.locator('[name=reason]').fill('Fictional browser profile approval');await page.locator('#review-password').fill('Fictional password 42!');
+    await Promise.all([page.waitForResponse(r=>r.url().includes('/staff-account-api.php')&&r.request().method()==='POST'&&r.status()===200),profileCard.getByRole('button',{name:'Confirm review decision'}).click()]);
+    await page.locator('#review-password').waitFor();await page.waitForFunction(()=>document.querySelector('#review-password').value==='');
+    assert.equal(sql('SELECT decision FROM account_profile_decisions WHERE request_id=?',[requestId])[0].decision,'approved');
+    const cedar=page.locator('#account-list article').filter({hasText:'cedar@example.invalid'});await cedar.getByRole('button',{name:'Review businesses and history'}).click();await page.locator('#company-section').waitFor({state:'visible'});await page.locator('#history-list article').first().waitFor();
+    assert.match(await page.locator('#company-list').textContent(),/11111111-1111-4111-8111-111111111111/);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    if(evidence){await page.screenshot({path:resolve(evidence,`${name}-staff.png`)});await profileCard.screenshot({path:resolve(evidence,`${name}-staff-profile.png`)});await page.locator('#company-section').screenshot({path:resolve(evidence,`${name}-staff-link.png`)});}
+    await page.locator('#staff-logout').click();await page.locator('#staff-entry').waitFor({state:'visible'});assert.equal(await page.locator('#account-list article').count(),0);
     assert.deepEqual(pageErrors,[]);assert.deepEqual(external,[]);await context.close();
     pass(`${name} browser login -> own-company dashboard -> logout; no script errors, external calls or overflow`);
+    pass(`${name} staff browser approval/profile review/link display/history/logout; no transaction activation`);
   }
  } finally {await browser.close();}
  assert(!/Fatal error|Uncaught|Warning:/.test(errors),errors);console.log('ALL PHP ACCOUNT SECURITY AND BROWSER SCENARIOS PASSED');

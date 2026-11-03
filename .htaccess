@@ -98,7 +98,7 @@ ErrorDocument 404 /404.html
 # Same protection for the portal login/account backend's config and
 # credentials files (portal-config.php / portal-secrets.php) — see
 # portal-config.php's own comments for what each one holds.
-<FilesMatch "^(portal-(config|secrets)|account-lib|account-mail-worker)\.php$">
+<FilesMatch "^(portal-(config|secrets)|account-lib|account-review-lib|account-mail-worker)\.php$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

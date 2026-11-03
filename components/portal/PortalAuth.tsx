@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import dynamic from 'next/dynamic'
 import { checkSession, portalPost, type SessionCheckResponse } from '@/lib/portal/api'
+import { validNewPassword, passwordPolicyMessage } from '@/lib/portal/password-policy'
 
 // Each signed-in screen is its own file, downloaded only for the kind of
 // account that needs it, so customers never receive any administrator code.
@@ -98,7 +99,7 @@ function PasswordField({ id, name, label, autoComplete, visible, onToggleVisible
           name={name}
           type={visible ? 'text' : 'password'}
           required
-          minLength={8}
+          minLength={autoComplete === 'new-password' ? 12 : undefined}
           autoComplete={autoComplete}
           className={inputClass}
         />
@@ -291,6 +292,12 @@ export function PortalAuth() {
     const password = String(formData.get('password') ?? '')
     const confirmPassword = String(formData.get('confirmPassword') ?? '')
 
+    if (!validNewPassword(password)) {
+      setRegisterStatus('error')
+      setRegisterMessage(passwordPolicyMessage)
+      return
+    }
+
     if (password !== confirmPassword) {
       setRegisterStatus('error')
       setRegisterMessage('Passwords do not match.')
@@ -324,9 +331,7 @@ export function PortalAuth() {
       if (status === 200 && data?.ok) {
         setRegisterStatus('success')
         setRegisterMessage(
-          data.status === 'pending'
-            ? 'Your account has been created and is awaiting approval. We’ll be in touch once it’s active.'
-            : 'Your account has been created. You can log in above.'
+          'If eligible, check your email to verify your address. GSX account approval is also required.'
         )
         form.reset()
         return
@@ -576,7 +581,7 @@ export function PortalAuth() {
               <PasswordField
                 id={regPasswordId}
                 name="password"
-                label="Password"
+                label="Password (12+ characters, at most 72 UTF-8 bytes)"
                 autoComplete="new-password"
                 visible={showPassword}
                 onToggleVisible={() => setShowPassword((v) => !v)}

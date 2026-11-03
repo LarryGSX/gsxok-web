@@ -3,6 +3,15 @@ if (PHP_SAPI !== 'cli') exit(1);
 require __DIR__.'/bootstrap.php';
 require __DIR__.'/../../account-lib.php';
 $db=gsx_db();
+if (in_array('--reset-fictional',$argv,true)) {
+    if ($db->query('SELECT DATABASE()')->fetchColumn()!=='gsx_account_fictional') throw new RuntimeException('Wrong fictional schema');
+    $db->exec('SET FOREIGN_KEY_CHECKS=0');
+    foreach($db->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN) as $table) {
+        if(!preg_match('/^[a-z_]+$/D',$table))throw new RuntimeException('Unexpected fixture table');
+        $db->exec('DROP TABLE `'.$table.'`');
+    }
+    $db->exec('SET FOREIGN_KEY_CHECKS=1');
+}
 if (count($db->query('SHOW TABLES')->fetchAll())) throw new RuntimeException('Refuse nonempty test database');
 $db->exec(file_get_contents(__DIR__.'/../../schema.sql'));
 $db->exec(file_get_contents(__DIR__.'/../../admin-setup.sql'));
@@ -12,6 +21,7 @@ $db->exec("INSERT INTO companies(user_id,name,address,city,state,zip,omma_licens
 $before=$db->query('SELECT * FROM users ORDER BY id')->fetchAll();
 $companies=$db->query('SELECT * FROM companies ORDER BY id')->fetchAll();
 $db->exec(file_get_contents(__DIR__.'/../../account-migration-001.sql'));
+$db->exec(file_get_contents(__DIR__.'/../../account-migration-002.sql'));
 foreach($db->query('SELECT * FROM users ORDER BY id')->fetchAll() as $i=>$row) foreach($before[$i] as $key=>$value) if($row[$key]!==$value) throw new RuntimeException('Migration modified original column '.$key);
 if ($companies!==$db->query('SELECT * FROM companies ORDER BY id')->fetchAll()) throw new RuntimeException('Company preservation failed');
 $db->exec('UPDATE users SET email_verified_at=NOW()');

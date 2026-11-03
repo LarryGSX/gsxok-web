@@ -17,7 +17,7 @@ async function refresh(){
     const form=document.createElement('form');const heading=document.createElement('h3');heading.textContent=company.name;form.append(heading);
     for(const key of ['name','address','city','state','zip','phone','email']){const label=document.createElement('label');label.textContent=key;const input=document.createElement('input');input.name=key;input.value=company[key];input.required=true;input.maxLength=255;label.append(input);form.append(label);}
     const button=document.createElement('button');button.textContent='Submit changes for review';form.append(button);
-    form.addEventListener('submit',async e=>{e.preventDefault();try{await post('account-api.php',{action:'profile-request',companyId:Number(company.id),profile:Object.fromEntries(new FormData(form))});notice.textContent='Changes submitted for review.';}catch(err){notice.textContent=err.message;}});
+    form.addEventListener('submit',async e=>{e.preventDefault();try{await post('account-api.php',{action:'profile-request',companyId:Number(company.id),profileVersion:company.profileVersion,profile:Object.fromEntries(new FormData(form))});notice.textContent='Changes submitted for review.';}catch(err){notice.textContent=err.message;}});
     document.querySelector('#companies').append(form);
   }
 }

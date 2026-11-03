@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": [
+    "components/portal/PortalAuth.tsx",
+    "components/portal/ResetPasswordForm.tsx",
+    "components/admin/AdminPanel.tsx",
+    "lib/portal/password-policy.ts"
+  ],
+  "exclude": ["node_modules", ".next", "staging"]
+}

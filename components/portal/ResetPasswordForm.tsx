@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { portalPost } from '@/lib/portal/api'
+import { validNewPassword, passwordPolicyMessage } from '@/lib/portal/password-policy'
 
 // Consumes a password reset link (?token=...) emailed by
 // forgot-password.php, or handed to a migrated legacy account that must
@@ -58,6 +59,12 @@ export function ResetPasswordForm() {
     const password = String(formData.get('password') ?? '')
     const confirmPassword = String(formData.get('confirmPassword') ?? '')
 
+    if (!validNewPassword(password)) {
+      setStatus('error')
+      setMessage(passwordPolicyMessage)
+      return
+    }
+
     if (password !== confirmPassword) {
       setStatus('error')
       setMessage('Passwords do not match.')
@@ -94,14 +101,14 @@ export function ResetPasswordForm() {
     <form onSubmit={handleSubmit} className="flex flex-col gap-5" style={{ maxWidth: '420px' }}>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={passwordId} className="text-label" style={{ color: 'var(--color-muted)' }}>
-          New Password
+          New Password (12+ characters, at most 72 UTF-8 bytes)
         </label>
         <input
           id={passwordId}
           name="password"
           type="password"
           required
-          minLength={8}
+          minLength={12}
           autoComplete="new-password"
           className={plainInputClass}
         />
@@ -116,7 +123,7 @@ export function ResetPasswordForm() {
           name="confirmPassword"
           type="password"
           required
-          minLength={8}
+          minLength={12}
           autoComplete="new-password"
           className={plainInputClass}
         />

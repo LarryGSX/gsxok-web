@@ -1,8 +1,11 @@
 # PHP customer accounts: phase-one handoff
 
+**Latest continuation:** [staff review, signed directory links and validation](php-staff-account-review.md)
+supersedes the phase-one unfinished staff/UI/linking items below.
+
 Branch: `codex/php-customer-account-security`, based on `origin/hostgator-static`
 at `2ea37129ef1e04411eabad2542958a0665c682f4`. PR #8 and website PR #2 are
-unchanged. This branch has not been pushed, merged or deployed. No production
+unchanged. This branch is pushed as draft PR #3; it has not been merged or deployed. No production
 database or real account is used by the tests.
 
 ## What this implements

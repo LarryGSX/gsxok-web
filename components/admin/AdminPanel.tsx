@@ -1,4 +1,5 @@
 'use client'
+import { validNewPassword, passwordPolicyMessage } from '@/lib/portal/password-policy'
 
 import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/Button'
@@ -201,6 +202,11 @@ function ChangePasswordForm({ forced, onDone }: { forced: boolean; onDone: () =>
     const newPassword = String(formData.get('newPassword') ?? '')
     const confirmPassword = String(formData.get('confirmPassword') ?? '')
 
+    if (!validNewPassword(newPassword)) {
+      setError(passwordPolicyMessage)
+      return
+    }
+
     if (newPassword !== confirmPassword) {
       setError('The new passwords do not match.')
       return
@@ -221,7 +227,7 @@ function ChangePasswordForm({ forced, onDone }: { forced: boolean; onDone: () =>
       if (data?.error === 'wrong_current_password') {
         setError('The current password is not correct.')
       } else if (data?.error === 'invalid_fields') {
-        setError('The new password must be at least 8 characters and different from the current one.')
+        setError(passwordPolicyMessage + ' Choose a different password from the current one.')
       } else {
         setError(GENERIC_ERROR)
       }
@@ -248,11 +254,11 @@ function ChangePasswordForm({ forced, onDone }: { forced: boolean; onDone: () =>
       />
       <Field
         id={newId}
-        label="New Password (8+ characters)"
+        label="New Password (12+ characters, at most 72 UTF-8 bytes)"
         name="newPassword"
         type="password"
         autoComplete="new-password"
-        minLength={8}
+        minLength={12}
       />
       <Field
         id={confirmId}
@@ -260,7 +266,7 @@ function ChangePasswordForm({ forced, onDone }: { forced: boolean; onDone: () =>
         name="confirmPassword"
         type="password"
         autoComplete="new-password"
-        minLength={8}
+        minLength={12}
       />
       <div className="mt-1">
         <Button type="submit" variant="primary" size="lg" disabled={busy}>
@@ -753,7 +759,7 @@ export function AdminPanel({
   mustChangePassword: boolean
   onSignedOut: () => void
 }) {
-  const [passwordChangeRequired, setPasswordChangeRequired] = useState(mustChangePassword)
+  const passwordChangeRequired = mustChangePassword
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [signOutBusy, setSignOutBusy] = useState(false)
   const [section, setSection] = useState<Section>('customers')
@@ -772,7 +778,7 @@ export function AdminPanel({
   }
 
   if (passwordChangeRequired) {
-    return <ChangePasswordForm forced onDone={() => setPasswordChangeRequired(false)} />
+    return <ChangePasswordForm forced onDone={onSignedOut} />
   }
 
   const sections: { key: Section; label: string }[] = [
@@ -794,6 +800,7 @@ export function AdminPanel({
           )}
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <a href="/staff-accounts.php" className={quietLinkClass}>Account identity review</a>
           <button type="button" onClick={() => setShowPasswordForm((v) => !v)} className={quietLinkClass}>
             Change password
           </button>
@@ -805,7 +812,7 @@ export function AdminPanel({
 
       {showPasswordForm && (
         <div className="mt-6">
-          <ChangePasswordForm forced={false} onDone={() => setShowPasswordForm(false)} />
+          <ChangePasswordForm forced={false} onDone={onSignedOut} />
         </div>
       )}
 
