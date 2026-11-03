@@ -33,3 +33,9 @@ prisma/migrations/dev.db
 # OS
 .DS_Store
 Thumbs.db
+
+# Data loading: exports of the old database and the SQL generated from them
+# contain customer details and must never be committed.
+/*-import.sql
+/tools/*.sql
+okgatesc_*.sql
