@@ -133,7 +133,7 @@ export default function ProductsPage() {
               <div className="flex flex-wrap items-center gap-5 shrink-0">
                 <Button href="/contact" variant="secondary" size="lg">Carry GSX</Button>
                 <Link
-                  href="/login"
+                  href="/portal"
                   className="text-button text-[rgba(250,248,243,0.55)] hover:text-[var(--color-cream)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-cream)] focus-visible:rounded-sm"
                 >
                   Retailer Portal →

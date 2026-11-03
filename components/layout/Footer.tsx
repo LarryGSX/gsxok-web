@@ -17,7 +17,7 @@ const footerLinks = {
   Retailers: [
     { href: '/find-gsx', label: 'Find GSX' },
     { href: '/contact', label: 'Carry GSX' },
-    { href: '/login', label: 'Portal Login' },
+    { href: '/portal', label: 'Portal Login' },
   ],
 }
 

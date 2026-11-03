@@ -3,9 +3,15 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
+
+// HostGator static build: no useSession() here (see app/providers.tsx for
+// why next-auth can't be part of this bundle at all, not just unused).
+// The portal backend isn't connected on this branch, so every visitor is
+// necessarily logged-out — this nav always renders exactly the state a
+// real visitor already sees today on the live site, just without an idle
+// fetch to a /api/auth/session endpoint that doesn't exist in this build.
 
 // Oklahoma / Respect the Dose GSX logo, the approved standalone lockup
 // (state outline, "Respect the Dose" script, GSX / Green Science Extracts
@@ -15,6 +21,10 @@ import { Button } from '@/components/ui/Button'
 // source asset that had the defect baked in.
 const NAV_LOGO_URL = 'https://cdn.sanity.io/images/o7wavkxv/production/00ee0021f084edb3e388c52345fe354c06ae45e7-808x448.png'
 
+// Only the public set is reachable on this branch (see the note above) —
+// the retailer/admin nav variants are dormant, not deleted, so restoring
+// real session state later is a small diff against this same file rather
+// than a rebuild from scratch.
 const publicNavLinks = [
   { href: '/', label: 'Home' },
   { href: '/products', label: 'Products' },
@@ -23,35 +33,16 @@ const publicNavLinks = [
   { href: '/contact', label: 'Contact' },
 ]
 
-const retailerNavLinks = [
-  { href: '/products', label: 'Products' },
-  { href: '/portal', label: 'My Portal' },
-  { href: '/portal/orders', label: 'Orders' },
-  { href: '/find-gsx', label: 'Find GSX' },
-]
-
-const adminNavLinks = [
-  { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/orders', label: 'Orders' },
-  { href: '/admin/accounts', label: 'Accounts' },
-  { href: '/products', label: 'Products' },
-]
-
 export function Nav() {
   const pathname = usePathname()
-  const { data: session, status } = useSession()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
-  const isAdmin = session?.user?.role === 'ADMIN'
-  const isRetailer = session?.user && !isAdmin
-  const isLoggedIn = Boolean(session?.user)
+  const isAdmin = false
+  const isRetailer = false
+  const isLoggedIn = false
 
-  const navLinks = isAdmin
-    ? adminNavLinks
-    : isRetailer
-    ? retailerNavLinks
-    : publicNavLinks
+  const navLinks = publicNavLinks
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -126,22 +117,19 @@ export function Nav() {
           {/* Right side — far right: desktop CTAs, or mobile toggle */}
           <div className="col-start-3 flex items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
-              {status === 'loading' ? (
-                // Skeleton while session resolves — prevents layout shift
-                <div className="w-24 h-4 bg-[rgba(250,248,243,0.1)] animate-pulse" />
-              ) : isLoggedIn ? (
+              {isLoggedIn ? (
                 <>
                   <span className="text-label text-[rgba(250,248,243,0.45)] truncate max-w-[140px]">
-                    {session?.user?.name ?? session?.user?.email}
+                    Account
                   </span>
-                  <Button href="/api/auth/signout" variant="secondary" size="sm">
+                  <Button href="/portal" variant="secondary" size="sm">
                     Sign out
                   </Button>
                 </>
               ) : (
                 <>
                   <Link
-                    href="/login"
+                    href="/portal"
                     className="text-label text-[rgba(250,248,243,0.55)] hover:text-[var(--color-cream)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:rounded-sm"
                   >
                     Portal Login
@@ -193,12 +181,12 @@ export function Nav() {
             )
           })}
           {isLoggedIn ? (
-            <Button href="/api/auth/signout" variant="secondary" size="sm" className="self-start">
+            <Button href="/portal" variant="secondary" size="sm" className="self-start">
               Sign out
             </Button>
           ) : (
             <>
-              <Link href="/login" className="text-body text-[rgba(250,248,243,0.6)]">Portal Login</Link>
+              <Link href="/portal" className="text-body text-[rgba(250,248,243,0.6)]">Portal Login</Link>
               <Button href="/contact" variant="primary" size="sm" className="self-start">Carry GSX</Button>
             </>
           )}
