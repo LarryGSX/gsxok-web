@@ -1,0 +1,13 @@
+PASS archive hashes/allowlists/default access denial; no sending worker, secrets or transaction files
+PASS fresh isolated schema/seeding works; reseeding refuses nonempty data
+PASS runtime role cannot perform DDL
+PASS live database name rejected before any connection
+PASS dedicated Secure cookie/path and guarded TLS/auth boundary (simulated locally)
+PASS capture-only queue failure/retry, scoped link and single-use verification
+PASS packaged staff approval/customer login/isolation work without transaction activation
+PASS packaged profile review and fictional signed linking preserve original company identity
+PASS capture-only password recovery revokes sessions and preserves account-only access
+PASS non-test submitted or stored recipient blocks processing; no transport can send
+PASS test-only SQL dump/restore preserves hashes, mappings, audit, triggers; old browser session unusable
+PASS disable switch blocks test endpoints without touching the website
+{"result":"PASS","packageRun":"13af330d","sourceCommit":"df16c07f724a6d4067c7363e9252a725bd6b1ca5","localDatabase":"fict198d_gsxcompat_13af330d","restoredDatabase":"fict198d_gsxcompat_13af330d_r1","artifactUnchanged":true,"apacheAndRealTlsTested":false}
