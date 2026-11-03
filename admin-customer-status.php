@@ -87,7 +87,7 @@ if ($oldStatus !== $newStatus) {
                  ON DUPLICATE KEY UPDATE tier = VALUES(tier), set_by = VALUES(set_by)'
             )->execute(['id' => $userId, 'tier' => $pricingTier, 'admin' => $admin['id']]);
         }
-        $db->prepare('UPDATE users SET account_status = :status WHERE id = :id')
+        $db->prepare('UPDATE users SET account_status = :status, auth_version = auth_version + 1 WHERE id = :id')
             ->execute(['status' => $newStatus, 'id' => $userId]);
         $db->commit();
     } catch (Throwable $e) {

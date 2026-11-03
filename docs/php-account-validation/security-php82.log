@@ -1,0 +1,21 @@
+PASS forged forwarded TLS cannot authorize HTTP outside explicit loopback test mode
+PASS customer and reviewer login with fictional existing credentials
+PASS own-company read isolation and private-response cache policy
+PASS cross-company mutation denied; own edits remain claims; legacy company data unchanged
+PASS cross-origin and missing-CSRF rejection
+PASS registration duplicate response matches new account; unverified account denied
+PASS unverified approval denied; weak and bcrypt-truncated new passwords rejected
+PASS single-use email verification, staff-only account approval, exact password preservation; no transaction activation
+PASS generic recovery, reset replay denied and existing session revoked
+PASS password change requires reauthentication and invalidates sessions
+PASS explicit session revocation
+PASS idle and absolute expiration independently enforced
+PASS suspension/reapproval cannot resurrect prior sessions
+PASS forged forwarding headers cannot bypass recovery throttling
+PASS concurrent reset consumers: exactly one succeeds across independent DB connections
+PASS expired recovery tokens rejected
+PASS mail delivery failure retains durable queue job and retry succeeds locally
+PASS original legacy identity links preserved after all account operations
+PASS desktop browser login -> own-company dashboard -> logout; no script errors, external calls or overflow
+PASS mobile browser login -> own-company dashboard -> logout; no script errors, external calls or overflow
+ALL PHP ACCOUNT SECURITY AND BROWSER SCENARIOS PASSED
