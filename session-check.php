@@ -35,7 +35,7 @@ $stmt = $db->prepare('SELECT first_name, email, account_status FROM users WHERE 
 $stmt->execute(['id' => $userId]);
 $user = $stmt->fetch();
 
-if ($user === false || $user['account_status'] !== 'active') {
+if ($user === false) {
     // Account was suspended (or otherwise deactivated) after the session
     // was created — treat as logged out rather than trusting the stale
     // session data.

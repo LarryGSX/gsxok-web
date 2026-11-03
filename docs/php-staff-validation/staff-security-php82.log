@@ -1,0 +1,34 @@
+PASS forged forwarded TLS cannot authorize HTTP outside explicit loopback test mode
+PASS customer and reviewer login with fictional existing credentials
+PASS own-company read isolation and private-response cache policy
+PASS cross-company mutation denied; own edits remain claims; legacy company data unchanged
+PASS cross-origin and missing-CSRF rejection
+PASS registration duplicate response matches new account; unverified account denied
+PASS unverified approval denied; weak and bcrypt-truncated new passwords rejected
+PASS single-use email verification, staff-only account approval, exact password preservation; no transaction activation
+PASS generic recovery, reset replay denied and existing session revoked
+PASS password change requires reauthentication and invalidates sessions
+PASS explicit session revocation
+PASS idle and absolute expiration independently enforced
+PASS suspension/reapproval cannot resurrect prior sessions
+PASS forged forwarding headers cannot bypass recovery throttling
+PASS concurrent reset consumers: exactly one succeeds across independent DB connections
+PASS expired recovery tokens rejected
+PASS mail delivery failure retains durable queue job and retry succeeds locally
+PASS original legacy identity links preserved after all account operations
+PASS staff-only paginated account lists deny customer/anonymous access and never expose hashes
+PASS temporary-password and disabled staff accounts cannot use the review API
+PASS staff decisions require CSRF, exact Origin, fresh password and reason; denied actions add no audit
+PASS staff password throttling survives decision rollback and blocks repeated reauthentication guesses
+PASS account approval records staff/reason, rejects stale decisions and leaves transaction status pending
+PASS profile approval updates only account overlay; rejected/duplicate/stale reviews cannot overwrite it
+PASS offline signer uses existing GSX export format, rejects absent IDs/checksum changes and never modifies source
+PASS customer linking fails closed when directory verification is unavailable
+PASS link receipts reject tampering, expiry, wrong audience/company and legacy-reference mismatch
+PASS exact-ID linking enforces uniqueness, explicit unlink, optimistic versions and single-use receipts
+PASS append-only staff audit/link/profile history preserves legacy records and the authoritative GSX directory
+PASS desktop browser login -> own-company dashboard -> logout; no script errors, external calls or overflow
+PASS desktop staff browser approval/profile review/link display/history/logout; no transaction activation
+PASS mobile browser login -> own-company dashboard -> logout; no script errors, external calls or overflow
+PASS mobile staff browser approval/profile review/link display/history/logout; no transaction activation
+ALL PHP ACCOUNT SECURITY AND BROWSER SCENARIOS PASSED

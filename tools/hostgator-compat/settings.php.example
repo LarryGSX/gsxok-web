@@ -1,0 +1,13 @@
+<?php
+// Copy to settings.php in the PRIVATE directory only, after test approval.
+return [
+    'enabled'=>false,
+    'runId'=>'__RUN__',
+    'origin'=>'https://gsxok.com', // Origin only: no path or trailing slash.
+    'publicDirectory'=>'/home/CPANEL/public_html/gsx-account-compat-__RUN__',
+    'dbHost'=>'localhost',
+    'dbPort'=>3306,
+    'dbName'=>'CPANEL_gsxcompat___RUN__',
+    'dbUser'=>'CPANEL_gct01', // A NEW dedicated user; only this fictional schema.
+    'dbPassword'=>'REPLACE_WITH_NEW_TEST_DATABASE_PASSWORD',
+];

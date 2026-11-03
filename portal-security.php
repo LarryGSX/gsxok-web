@@ -7,6 +7,13 @@
 
 require_once __DIR__ . '/portal-config.php';
 require_once __DIR__ . '/portal-db.php';
+if (PHP_SAPI !== 'cli') {
+    ini_set('display_errors', '0');
+    set_exception_handler(function (Throwable $error): void {
+        error_log('[portal] request failed ('.get_class($error).')');
+        gsx_json_response(500, ['ok'=>false,'error'=>'temporarily_unavailable']);
+    });
+}
 
 // Same value as portal-config.php. Repeated as a fallback because the
 // portal-config.php that was already on the server before the per-IP limit
@@ -26,18 +33,47 @@ function gsx_start_session(): void
         return;
     }
 
-    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    $local = defined('GSX_LOCAL_TEST') && GSX_LOCAL_TEST && in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1','::1'], true);
+    if (!$isHttps && !$local) gsx_json_response(400, ['ok'=>false,'error'=>'https_required']);
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    session_name($local ? 'gsx_account_local' : '__Host-gsx-account');
 
     session_set_cookie_params([
         'lifetime' => GSX_SESSION_LIFETIME_SECONDS,
         'path' => '/',
-        'secure' => $isHttps,
+        'secure' => !$local,
         'httponly' => true,
         'samesite' => GSX_SESSION_COOKIE_SAMESITE,
     ]);
 
     session_start();
+    header('Cache-Control: no-store');
+    if (isset($_SESSION['user_id']) || isset($_SESSION['admin_id'])) {
+        $now=time(); $admin=isset($_SESSION['admin_id']);
+        $table=$admin?'admins':'users'; $id=$_SESSION[$admin?'admin_id':'user_id'];
+        $q=gsx_db()->prepare('SELECT * FROM '.$table.' WHERE id=?'); $q->execute([$id]); $row=$q->fetch();
+        $active=$row && ($admin ? $row['status']==='active' : ($row['account_access']==='approved' && $row['account_status']!=='suspended' && $row['email_verified_at']));
+        if (!$active || !isset($_SESSION['auth_version'],$_SESSION['issued_at'],$_SESSION['last_seen'])
+            || (int)$row['auth_version'] !== (int)$_SESSION['auth_version']
+            || $now-(int)$_SESSION['issued_at']>=GSX_SESSION_LIFETIME_SECONDS
+            || $now-(int)$_SESSION['last_seen']>=1800) {
+            $_SESSION=[]; session_regenerate_id(true);
+        } else $_SESSION['last_seen']=$now;
+    }
+}
+
+function gsx_bind_session(array $row, bool $admin): void {
+    $_SESSION=[]; gsx_regenerate_session();
+    $_SESSION[$admin?'admin_id':'user_id']=(int)$row['id'];
+    $_SESSION['auth_version']=(int)$row['auth_version'];
+    $_SESSION['issued_at']=$_SESSION['last_seen']=time();
+    if ($admin) $_SESSION['admin_last_seen']=time();
+}
+function gsx_valid_password(string $password): bool {
+    // A byte bound avoids bcrypt silently truncating at 72 bytes on fallback.
+    return !str_contains($password,"\0") && mb_strlen($password)>=12 && strlen($password)<=72;
 }
 
 /** Call immediately after a successful login — prevents session fixation. */
@@ -66,6 +102,14 @@ function gsx_csrf_token(): string
 
 function gsx_require_csrf(): void
 {
+    $expectedOrigin=rtrim(GSX_SITE_BASE_URL,'/');
+    $origins=[$expectedOrigin];
+    if (in_array($expectedOrigin,['https://gsxok.com','https://www.gsxok.com'],true)) $origins=['https://gsxok.com','https://www.gsxok.com'];
+    if (!in_array($_SERVER['HTTP_ORIGIN']??'',$origins,true)) {
+        gsx_json_response(403,['ok'=>false,'error'=>'invalid_origin']);
+    }
+    if ((int)($_SERVER['CONTENT_LENGTH']??0)>16384) gsx_json_response(413,['ok'=>false,'error'=>'request_too_large']);
+    if (stripos($_SERVER['CONTENT_TYPE']??'','application/json')!==0) gsx_json_response(415,['ok'=>false,'error'=>'invalid_content_type']);
     $header = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     $expected = $_SESSION['csrf_token'] ?? '';
 
@@ -90,12 +134,13 @@ function gsx_hash_password(string $password): string
 
 function gsx_verify_password(string $password, ?string $hash): bool
 {
+    if (strlen($password)>72 || str_contains($password,"\0")) return false;
     if ($hash === null || $hash === '') {
         // Still run password_verify() against a real (dummy) hash so a
         // login attempt against a nonexistent/unset-password account takes
         // roughly the same time as a real one — avoids a timing signal
         // that would otherwise reveal which emails have accounts.
-        password_verify($password, '$2y$12$abcdefghijklmnopqrstuv.abcdefghijklmnopqrstuvwxyz1234');
+        password_verify($password, '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.');
         return false;
     }
     return password_verify($password, $hash);
@@ -105,12 +150,7 @@ function gsx_verify_password(string $password, ?string $hash): bool
 
 function gsx_client_ip(): string
 {
-    $forwardedFor = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? null;
-    if ($forwardedFor) {
-        $parts = explode(',', $forwardedFor);
-        return trim($parts[0]);
-    }
-    return $_SERVER['HTTP_X_REAL_IP'] ?? ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 }
 
 // ── Login rate limiting / lockout ────────────────────────────────────────

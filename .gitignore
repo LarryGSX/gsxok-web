@@ -45,3 +45,7 @@ portal-secrets.php
 /*-import.sql
 /tools/*.sql
 okgatesc_*.sql
+
+# Directory signing inputs/receipts are private operational artifacts.
+*.pem
+*.receipt

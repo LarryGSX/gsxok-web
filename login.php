@@ -58,7 +58,7 @@ $db = gsx_db();
 // Administrator lookup. If the admin tables don't exist yet, treat it as
 // "no such administrator" so customer sign-in keeps working.
 try {
-    $stmt = $db->prepare('SELECT id, password_hash, status FROM admins WHERE email = :email');
+    $stmt = $db->prepare('SELECT id, password_hash, status, auth_version FROM admins WHERE email = :email');
     $stmt->execute(['email' => $email]);
     $admin = $stmt->fetch();
 } catch (Throwable $e) {
@@ -66,7 +66,7 @@ try {
     $admin = false;
 }
 
-$stmt = $db->prepare('SELECT id, password_hash, account_status FROM users WHERE email = :email');
+$stmt = $db->prepare('SELECT id, password_hash, account_status, account_access, email_verified_at, auth_version FROM users WHERE email = :email');
 $stmt->execute(['email' => $email]);
 $user = $stmt->fetch();
 
@@ -79,23 +79,18 @@ if ($admin !== false && $adminPasswordOk && $admin['status'] === 'active') {
     gsx_record_login_attempt($email, $ip, true);
     gsx_prune_login_attempts();
 
-    gsx_regenerate_session();
-    unset($_SESSION['user_id']);
-    $_SESSION['admin_id'] = (int) $admin['id'];
-    $_SESSION['admin_last_seen'] = time();
+    gsx_bind_session($admin, true);
 
     gsx_admin_audit((int) $admin['id'], 'admin_login', null, null);
 
     gsx_json_response(200, ['ok' => true]);
 }
 
-if ($user !== false && $customerPasswordOk && $user['account_status'] === 'active') {
+if ($user !== false && $customerPasswordOk && $user['account_status'] !== 'suspended' && $user['account_access'] === 'approved' && $user['email_verified_at']) {
     gsx_record_login_attempt($email, $ip, true);
     gsx_prune_login_attempts();
 
-    gsx_regenerate_session();
-    unset($_SESSION['admin_id'], $_SESSION['admin_last_seen']);
-    $_SESSION['user_id'] = (int) $user['id'];
+    gsx_bind_session($user, false);
 
     gsx_json_response(200, ['ok' => true]);
 }

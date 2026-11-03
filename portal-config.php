@@ -51,7 +51,7 @@ define('GSX_RESET_TOKEN_LIFETIME_MINUTES', 60);
 // attack (a poisoned link that looks like a real reset email but points
 // to an attacker's domain). Update this to the real live domain before
 // going live; it deliberately does not fall back to $_SERVER.
-define('GSX_SITE_BASE_URL', 'https://www.gsxok.com');
+defined('GSX_SITE_BASE_URL') || define('GSX_SITE_BASE_URL', 'https://www.gsxok.com');
 
 // Same "not connected yet" honesty pattern as contact.php's GSX_MAIL_READY.
 // While false, forgot-password.php still creates and stores a real reset
@@ -60,8 +60,8 @@ define('GSX_SITE_BASE_URL', 'https://www.gsxok.com');
 // nothing about account existence leaks either way. Set to true only once
 // GSX_CONTACT_FROM (or a dedicated portal address) is confirmed to be a
 // real, authorized mailbox for this domain on HostGator.
-define('GSX_PORTAL_MAIL_READY', false);
-define('GSX_PORTAL_MAIL_FROM', 'GSX Portal <contact@gsxok.com>');
+defined('GSX_PORTAL_MAIL_READY') || define('GSX_PORTAL_MAIL_READY', false);
+defined('GSX_PORTAL_MAIL_FROM') || define('GSX_PORTAL_MAIL_FROM', 'GSX Portal <contact@gsxok.com>');
 
 // ── Staff (administrator) sign-in ────────────────────────────────────────
 // An admin session expires after this long with no activity.

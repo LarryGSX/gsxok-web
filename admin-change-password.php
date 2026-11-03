@@ -33,7 +33,7 @@ $confirm = isset($body['confirmPassword']) && is_string($body['confirmPassword']
 
 $errors = [];
 if ($current === '') $errors[] = 'currentPassword';
-if (mb_strlen($new) < GSX_ADMIN_PASSWORD_MIN) $errors[] = 'newPassword';
+if (!gsx_valid_password($new)) $errors[] = 'newPassword';
 if ($new !== $confirm) $errors[] = 'confirmPassword';
 if ($new === $current && $new !== '') $errors[] = 'newPassword';
 
@@ -50,7 +50,7 @@ if ($row === false || !gsx_verify_password($current, $row['password_hash'])) {
     gsx_admin_json(400, ['ok' => false, 'error' => 'wrong_current_password']);
 }
 
-$db->prepare('UPDATE admins SET password_hash = :hash, must_change_password = 0 WHERE id = :id')
+$db->prepare('UPDATE admins SET password_hash = :hash, must_change_password = 0, auth_version = auth_version + 1 WHERE id = :id')
     ->execute(['hash' => gsx_hash_password($new), 'id' => $admin['id']]);
 
 gsx_admin_audit((int) $admin['id'], 'admin_password_changed', null, null);
