@@ -28,9 +28,26 @@ export interface ZipLocation {
   state: string
 }
 
+// Only ZIPs inside Oklahoma plus a ~150-mile buffer resolve (lat 31.4-39.2,
+// lng -105.6 to -91.8). This is the same area the approved HostGator build
+// ships in public/data/ok-zips.json, so a search for a ZIP far from any GSX
+// retailer gives the same "not found" result on both versions.
+const MIN_LAT = 31.4
+const MAX_LAT = 39.2
+const MIN_LNG = -105.6
+const MAX_LNG = -91.8
+
 export function lookupZip(zip: string): ZipLocation | null {
   const result = zipcodes.lookup(zip)
   if (!result) return null
+  if (
+    result.latitude < MIN_LAT ||
+    result.latitude > MAX_LAT ||
+    result.longitude < MIN_LNG ||
+    result.longitude > MAX_LNG
+  ) {
+    return null
+  }
 
   return {
     zip: result.zip,
