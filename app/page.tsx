@@ -201,6 +201,35 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* ── COMPLIANCE DOCUMENTS — compact band for dispensaries looking for
+            GSX's paperwork. Same structure as the Find GSX band below. ── */}
+        <section aria-label="Compliance Documents" className="bg-[var(--color-ink-alt)] border-t border-[rgba(250,248,243,0.06)]">
+          <div className={G} style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem' }}>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-12">
+              <div className="flex items-start gap-5">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="shrink-0 text-[var(--color-accent)]" style={{ marginTop: '0.2rem' }} aria-hidden="true">
+                  <path d="M6 2.5h8l4.5 4.5v14a.5.5 0 0 1-.5.5H6a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+                  <path d="M14 2.5V7h4.5M8.5 13h7M8.5 16.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <div>
+                  <p className="text-label" style={{ color: 'rgba(250,248,243,0.4)', marginBottom: '0.3rem' }}>
+                    For Dispensaries
+                  </p>
+                  <h2 className="text-[var(--color-cream)] font-[family-name:var(--font-space-grotesk)] font-semibold" style={{ fontSize: 'clamp(1.375rem, 2vw, 1.75rem)', letterSpacing: '-0.02em' }}>
+                    Compliance Documents
+                  </h2>
+                  <p className="text-[rgba(250,248,243,0.5)] font-[family-name:var(--font-manrope)]" style={{ fontSize: '0.9375rem', lineHeight: '1.6', marginTop: '0.4rem', maxWidth: '52ch' }}>
+                    Need GSX&rsquo;s paperwork on file? View, print, or download our OMMA processor license and DEA application documentation. No login required.
+                  </p>
+                </div>
+              </div>
+              <Button href="/compliance-documents" variant="primary" size="lg" className="shrink-0 self-start lg:self-center">
+                View Compliance Documents
+              </Button>
+            </div>
+          </div>
+        </section>
+
         <Rule />
 
         {/* ── BUILT IN OKLAHOMA, MADE BY GSX — real HTML/CSS, full-width ── */}
